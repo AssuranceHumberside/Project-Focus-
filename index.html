@@ -2,43 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Humberside Scout Safety Audit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Humberside Scouts Safety Audit</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden { display: none; }
+        .met-archive { background-color: #f0fdf4; border-color: #bbf7d0; opacity: 0.8; }
+    </style>
 </head>
-<body class="bg-gray-100 p-8">
-    <div id="auth-container" class="max-w-md mx-auto bg-white p-6 rounded shadow">
-        <h2 class="text-2xl font-bold mb-4">Login</h2>
-        <input type="email" id="email" placeholder="Email" class="w-full border p-2 mb-2">
-        <input type="password" id="password" placeholder="Password" class="w-full border p-2 mb-4">
-        <button onclick="login()" class="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div id="auth-ui" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4">Staff Login</h2>
+        <input type="email" id="email" placeholder="Email" class="w-full border p-2 mb-2 rounded">
+        <input type="password" id="password" placeholder="Password" class="w-full border p-2 mb-4 rounded">
+        <button onclick="handleLogin()" class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800">Sign In</button>
     </div>
 
-    <div id="audit-container" class="hidden max-w-4xl mx-auto bg-white p-8 rounded shadow">
-        <h1 class="text-3xl font-bold mb-6">Safety Audit [cite: 1]</h1>
-        
-        <div class="mb-8">
-            <h2 class="text-xl font-semibold mb-4 underline">Section 1 — Basic Details </h2>
-            <input type="text" id="name" placeholder="Name" class="border p-2 mr-2"> [cite: 4]
-            <input type="text" id="group" placeholder="Group" class="border p-2"> [cite: 7]
-        </div>
+    <div id="audit-ui" class="hidden max-w-4xl mx-auto space-y-6">
+        <header class="bg-white p-6 rounded-lg shadow-sm border-b-4 border-purple-800">
+            <h1 class="text-3xl font-bold text-purple-900">Safety Audit — Humberside Scouts</h1>
+            <p class="text-gray-600">Please complete all sections. "Partially" or "No" requires an explanation.</p>
+        </header>
 
-        <div class="mb-6 p-4 border-l-4 border-blue-500">
-            <p class="font-medium">1. All leaders/helpers have appropriate enquiries (DBS/AAC). [cite: 10]</p>
-            <div class="mt-2">
-                <label><input type="radio" name="q1" value="Yes" onclick="toggleBranch('q1', false)"> Yes</label>
-                <label class="ml-4"><input type="radio" name="q1" value="No" onclick="toggleBranch('q1', true)"> No</label>
-                <label class="ml-4"><input type="radio" name="q1" value="Partially" onclick="toggleBranch('q1', true)"> Partially</label> [cite: 11]
+        <section class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-bold mb-4">Section 1: Basic Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="name" placeholder="Full Name" class="border p-2 rounded">
+                <input type="email" id="audit-email" placeholder="Contact Email" class="border p-2 rounded">
+                <select id="district" class="border p-2 rounded">
+                    <option value="">Select District</option>
+                    <option value="District A">District A</option>
+                    <option value="District B">District B</option>
+                </select>
+                <input type="text" id="group" placeholder="Group Name" class="border p-2 rounded">
+                <input type="text" id="section" placeholder="Section (e.g., Beavers)" class="border p-2 rounded">
             </div>
-            
-            <div id="q1-branch" class="hidden mt-4 bg-yellow-50 p-3">
-                <p class="text-sm text-red-600 font-bold">Explanation Required: </p>
-                <textarea id="q1-explain" placeholder="Describe the issue..." class="w-full border p-2 mb-2"></textarea>
-                <p class="text-sm text-red-600 font-bold">Expected Resolution Date: </p>
-                <input type="date" id="q1-date" class="border p-2">
-            </div>
-        </div>
+        </section>
 
-        <button onclick="saveAudit()" class="bg-green-600 text-white px-6 py-2 rounded">Save Progress</button>
+        <div id="questions-container" class="space-y-4">
+            </div>
+
+        <div class="flex gap-4">
+            <button onclick="submitAudit()" class="flex-1 bg-green-600 text-white py-4 rounded-xl text-xl font-bold hover:bg-green-700 shadow-lg">Submit Final Audit</button>
+        </div>
     </div>
 
     <script type="module" src="app.js"></script>
