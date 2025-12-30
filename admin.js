@@ -3,57 +3,78 @@ import { getFirestore, collection, getDocs } from "https://www.gstatic.com/fireb
 
 const firebaseConfig = {
   apiKey: "AIzaSyCtLq8oOWyKb_R8Eff86G4XG54xP49uFyg", //
-  authDomain: "project-focus-2.firebaseapp.com", //
-  projectId: "project-focus-2", //
-  storageBucket: "project-focus-2.firebasestorage.app", //
-  messagingSenderId: "442223918612", //
-  appId: "1:442223918612:web:45b50f767725d7adc2b101" //
+  authDomain: "project-focus-2.firebaseapp.com",
+  projectId: "project-focus-2",
+  storageBucket: "project-focus-2.firebasestorage.app",
+  messagingSenderId: "442223918612",
+  appId: "1:442223918612:web:45b50f767725d7adc2b101"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function loadAuditData() {
-    const tableBody = document.getElementById('admin-table-body');
+let allAudits = [];
+const districtList = [
+    "Beverley and Hornsea", "Blacktoft Beacon", "City of Hull", "County Section",
+    "Grimsby and Cleethorpes", "North Lincolnshire", "Pocklington", 
+    "South Holderness", "Wolds and Coast"
+];
+
+async function loadData() {
     const querySnapshot = await getDocs(collection(db, "sectional_audits"));
-    
-    let total = 0, met = 0, action = 0;
-
-    querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        total++;
-        
-        let issues = [];
-        // Check all responses for non-'Yes' status
-        for (const [qId, res] of Object.entries(data.responses)) {
-            if (res.status !== "Yes") {
-                issues.push(`<strong>${qId}:</strong> ${res.explanation} (Due: ${res.deadline || 'N/A'})`);
-            }
-        }
-
-        const isFullyMet = issues.length === 0;
-        isFullyMet ? met++ : action++;
-
-        const row = `
-            <tr class="border-b hover:bg-gray-50">
-                <td class="p-3">
-                    <span class="font-bold">${data.details.group}</span><br>
-                    <span class="text-sm text-gray-600">${data.details.district} - ${data.details.section}</span>
-                </td>
-                <td class="p-3">
-                    <span class="px-2 py-1 rounded text-xs font-bold ${isFullyMet ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">
-                        ${isFullyMet ? 'ALL MET' : 'ACTION REQUIRED'}
-                    </span>
-                </td>
-                <td class="p-3 text-sm">${isFullyMet ? 'No issues found' : issues.join('<br>')}</td>
-            </tr>
-        `;
-        tableBody.innerHTML += row;
-    });
-
-    document.getElementById('total-count').innerText = total;
-    document.getElementById('met-count').innerText = met;
-    document.getElementById('action-count').innerText = action;
+    allAudits = querySnapshot.docs.map(doc => doc.data());
+    showDistricts();
 }
 
-loadAuditData();
+window.showDistricts = () => {
+    document.getElementById('district-view').classList.remove('hidden');
+    document.getElementById('detail-view').classList.add('hidden');
+    document.getElementById('back-btn').classList.add('hidden');
+    
+    const container = document.getElementById('district-view');
+    container.innerHTML = districtList.map(district => {
+        const districtAudits = allAudits.filter(a => a.details.district === district);
+        const actionItems = districtAudits.filter(a => 
+            Object.values(a.responses).some(r => r.status !== "Yes")
+        ).length;
+
+        return `
+            <div onclick="showDetails('${district}')" class="cursor-pointer bg-white p-6 rounded-xl shadow hover:border-purple-500 border-2 transition-all ${actionItems > 0 ? 'bg-red-50' : 'bg-green-50'}">
+                <h3 class="font-bold text-lg text-purple-900">${district}</h3>
+                <p class="text-sm text-gray-600">${districtAudits.length} Audits</p>
+                <p class="text-sm font-bold ${actionItems > 0 ? 'text-red-600' : 'text-green-600'}">
+                    ${actionItems} Action Required
+                </p>
+            </div>
+        `;
+    }).join('');
+};
+
+window.showDetails = (district) => {
+    document.getElementById('district-view').classList.add('hidden');
+    document.getElementById('detail-view').classList.remove('hidden');
+    document.getElementById('back-btn').classList.remove('hidden');
+    document.getElementById('detail-title').innerText = district;
+
+    const districtAudits = allAudits.filter(a => a.details.district === district);
+    const tableBody = document.getElementById('detail-table-body');
+    
+    tableBody.innerHTML = districtAudits.map(a => {
+        let issues = [];
+        for (const [qId, res] of Object.entries(a.responses)) {
+            if (res.status !== "Yes") issues.push(`- ${res.explanation}`);
+        }
+
+        return `
+            <tr class="border-b">
+                <td class="p-4 font-bold text-purple-900">${a.details.group} - ${a.details.section}</td>
+                <td class="p-4 font-bold ${issues.length > 0 ? 'text-red-600' : 'text-green-600'}">
+                    ${issues.length > 0 ? 'ACTION' : 'MET'}
+                </td>
+                <td class="p-4 text-xs italic">${issues.join('<br>') || 'All Standards Met'}</td>
+            </tr>
+        `;
+    }).join('');
+};
+
+loadData();
