@@ -7,69 +7,65 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .hidden { display: none; }
-        .met-card { border-left: 8px solid #10b981; background-color: #f0fdf4; }
-        .action-card { border-left: 8px solid #ef4444; background-color: #fef2f2; }
-        .focus-teal { background-color: #00857a; } /* Matches Project FOCUS header */
+        /* Scouts Heritage Teal and Purple */
+        .scouts-teal { background-color: #003945; } 
+        .scouts-purple { background-color: #633185; }
+        .met-card { border-left: 8px solid #003945; background-color: #f0fdf4; }
+        .action-card { border-left: 8px solid #e22e12; background-color: #fef2f2; }
+        .btn-primary { background-color: #003945; color: white; transition: background 0.3s; }
+        .btn-primary:hover { background-color: #002933; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900">
+
+    <header class="scouts-purple text-white p-4 shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold italic tracking-tight">Project FOCUS</h1>
+            <div id="user-status" class="text-xs hidden italic">Logged in as: <span id="current-user-email"></span></div>
+        </div>
+    </header>
 
     <div id="auth-ui" class="max-w-4xl mx-auto pt-10 px-4">
-        <div class="focus-teal text-white p-8 rounded-t-xl shadow-lg">
-            <h1 class="text-4xl font-bold mb-2 text-white">Project FOCUS</h1>
-            <p class="text-xl opacity-90 italic text-white">Fostering Ongoing Compliance and Understanding of Safety</p>
+        <div class="scouts-teal text-white p-8 rounded-t-xl shadow-lg">
+            <h2 class="text-3xl font-bold mb-2">Assurance through Project FOCUS</h2>
+            <p class="text-lg opacity-90 italic">Fostering Ongoing Compliance and Understanding of Safety</p>
         </div>
-        <div class="bg-white p-8 rounded-b-xl shadow-lg grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="space-y-4 text-slate-700">
-                <h2 class="text-2xl font-bold text-slate-800">Welcome to Project FOCUS</h2>
-                <p class="text-sm leading-relaxed">This is our dedicated initiative to ensure the highest standards of safety across the county. Within Project FOCUS, we are committed to making sure that every Section, Group, and District adheres to The Scouts' Policy Organisation and Rules (POR).</p>
-                <div class="bg-yellow-100 p-4 border-l-4 border-yellow-500 rounded text-sm italic">
-                    "Can you be sure that all Sections, Groups, and Districts that are run within the County are safe?"
+        <div class="bg-white p-8 rounded-b-xl shadow-lg border-b-8 border-yellow-400">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold">Safe Scouting</h3>
+                    <p class="text-sm">Within Project FOCUS, we are committed to ensuring every section adheres to The Scouts' Policy Organisation and Rules (POR).</p>
+                    <p class="text-xs italic bg-slate-100 p-3 rounded">"Can you be sure that all Sections, Groups, and Districts that are run within the County are safe?"</p>
                 </div>
-            </div>
-            <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
-                <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Assurance Login</h3>
-                <input type="email" id="email" placeholder="Email" class="w-full border p-3 mb-3 rounded focus:ring-2 focus:ring-teal-500 outline-none">
-                <input type="password" id="password" placeholder="Password" class="w-full border p-3 mb-6 rounded focus:ring-2 focus:ring-teal-500 outline-none">
-                <button onclick="handleLogin()" class="w-full bg-teal-700 text-white py-3 rounded-lg font-bold hover:bg-teal-800 transition-colors">Sign In</button>
+                <div class="bg-slate-50 p-6 rounded-lg">
+                    <input type="email" id="email" placeholder="Email Address" class="w-full border p-3 mb-3 rounded shadow-sm">
+                    <input type="password" id="password" placeholder="Password" class="w-full border p-3 mb-4 rounded shadow-sm">
+                    <button onclick="handleLogin()" class="w-full scouts-purple text-white py-3 rounded font-bold hover:opacity-90 transition-all">Sign In</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="audit-ui" class="hidden max-w-4xl mx-auto py-10 px-4 space-y-6">
-        <div class="focus-teal text-white p-8 rounded-xl shadow-md">
-            <h1 class="text-3xl font-bold">Project FOCUS</h1>
-            <h2 class="text-xl font-semibold opacity-90 text-yellow-400">Sectional Safety Assurance</h2>
+    <div id="audit-ui" class="hidden max-w-4xl mx-auto py-8 px-4 space-y-6">
+        <div class="flex justify-between items-center">
+            <h2 id="section-title" class="text-2xl font-bold text-slate-800 uppercase tracking-wide">Section 1: Basic Details</h2>
+            <button onclick="handleLogout()" class="text-xs scouts-teal text-white px-4 py-2 rounded">Save & Logout</button>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow border-l-4 border-teal-600 italic text-slate-700">
-            <p>Naturally, we need help to answer our safety commitment in a positive way and we're going to need everyone's support to achieve this. That's where Project FOCUS was born.</p>
+        <div class="flex gap-2">
+            <div id="prog-1" class="h-2 flex-1 rounded-full bg-slate-200 transition-all duration-500"></div>
+            <div id="prog-2" class="h-2 flex-1 rounded-full bg-slate-200 transition-all duration-500"></div>
+            <div id="prog-3" class="h-2 flex-1 rounded-full bg-slate-200 transition-all duration-500"></div>
+            <div id="prog-4" class="h-2 flex-1 rounded-full bg-slate-200 transition-all duration-500"></div>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow border-t-4 border-teal-800">
-            <h2 class="text-xl font-bold mb-4 text-teal-900">Section 1: Basic Details</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="name" placeholder="Name" class="border p-2 rounded">
-                <select id="district" class="border p-2 rounded">
-                    <option value="">Select District...</option>
-                    <option value="Beverley and Hornsea">Beverley and Hornsea</option>
-                    <option value="Blacktoft Beacon">Blacktoft Beacon</option>
-                    <option value="City of Hull">City of Hull</option>
-                    <option value="County Section">County Section</option>
-                    <option value="Grimsby and Cleethorpes">Grimsby and Cleethorpes</option>
-                    <option value="North Lincolnshire">North Lincolnshire</option>
-                    <option value="Pocklington">Pocklington</option>
-                    <option value="South Holderness">South Holderness</option>
-                    <option value="Wolds and Coast">Wolds and Coast</option>
-                </select>
-                <input type="text" id="group" placeholder="Group" class="border p-2 rounded">
-                <input type="text" id="section-name" placeholder="Section (e.g. Scouts)" class="border p-2 rounded">
-            </div>
+        <div id="form-container" class="space-y-6"></div>
+
+        <div class="flex justify-between items-center pt-6 border-t">
+            <button id="prev-btn" onclick="changeSection(-1)" class="hidden text-slate-600 font-bold px-6 py-3 border rounded">Previous</button>
+            <button id="next-btn" onclick="changeSection(1)" class="ml-auto scouts-teal text-white px-8 py-3 rounded font-bold shadow-lg">Next Section</button>
+            <button id="submit-btn" onclick="finalSubmit()" class="hidden ml-auto bg-green-600 text-white px-8 py-3 rounded font-bold shadow-lg">Complete Submission</button>
         </div>
-
-        <div id="questions-container" class="space-y-4"></div>
-
-        <button onclick="submitAudit()" class="w-full bg-teal-700 text-white py-5 rounded-xl text-2xl font-bold shadow-xl hover:bg-teal-800">Submit to Project FOCUS</button>
     </div>
 
     <script type="module" src="app.js"></script>
