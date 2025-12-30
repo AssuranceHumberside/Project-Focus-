@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SME Admin Console - Humberside Scouts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-purple-900">Safety Audit Results</h1>
+            <button onclick="location.reload()" class="bg-purple-800 text-white px-4 py-2 rounded">Refresh Data</button>
+        </div>
+
+        <div id="stats" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-center">
+            <div class="bg-blue-100 p-4 rounded-lg">Total Audits: <span id="total-count" class="font-bold">0</span></div>
+            <div class="bg-green-100 p-4 rounded-lg text-green-800">Fully Met: <span id="met-count" class="font-bold">0</span></div>
+            <div class="bg-red-100 p-4 rounded-lg text-red-800">Actions Needed: <span id="action-count" class="font-bold">0</span></div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-purple-900 text-white">
+                        <th class="p-3">Section Info</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3">Key Issues & Deadlines</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
