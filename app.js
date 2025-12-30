@@ -1,9 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg", 
+  apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg",
   authDomain: "project-focus-2.firebaseapp.com",
   projectId: "project-focus-2",
   storageBucket: "project-focus-2.firebasestorage.app",
@@ -15,93 +15,157 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const questions = [
-    { id: "q1", text: "Leaders/helpers have appropriate enquiries (DBS/AAC)." },
-    { id: "q2", text: "Suitable supervision plan in place for all meetings/visits." },
-    { id: "q3", text: "Appropriate InTouch process in place." },
-    { id: "q4", text: "Medical/health details available for all people." },
-    { id: "q5", text: "Chairs and tables are stored safely." },
-    { id: "q6", text: "Tripping or slipping hazards have been reduced." },
-    { id: "q7", text: "Consideration given to overhead hazards/unguarded lights." },
-    { id: "q8", text: "Boundaries briefed and understood by young people." },
-    { id: "q9", text: "Potential for falls on sharp objects/glass minimised." },
-    { id: "q10", text: "All games played are suitable for age and ability." },
-    { id: "q11", text: "Rules of all games are briefed and understood." },
-    { id: "q12", text: "All equipment used is checked, safe and in good order." },
-    { id: "q13", text: "First-aid kit available and accessible at all times." },
-    { id: "q14", text: "Plan for what to do in an emergency is in place." },
-    { id: "q15", text: "Identified leader in charge for all meetings/activities." },
-    { id: "q16", text: "Leader in charge accounts for all people regularly." },
-    { id: "q17", text: "Leader allocates roles and responsibilities to adults." },
-    { id: "q18", text: "Everyone understands how to record/report incidents." },
-    { id: "q19", text: "Safety discussed at start of events and planning." },
-    { id: "q20", text: "Appropriate training/rules given for activities." },
-    { id: "q21", text: "Leadership team supported to gain safety knowledge." },
-    { id: "q22", text: "Safety equipment in the meeting place inspected regularly." }
+let currentStep = 0;
+let userProgress = {};
+
+const sections = [
+    { title: "Section 1: Basic Details", questions: [
+        { id: "name", type: "text", text: "Full Name" },
+        { id: "district", type: "select", text: "District", options: ["Beverley and Hornsea", "Blacktoft Beacon", "City of Hull", "County Section", "Grimsby and Cleethorpes", "North Lincolnshire", "Pocklington", "South Holderness", "Wolds and Coast"] },
+        { id: "group", type: "text", text: "Scout Group" },
+        { id: "section", type: "text", text: "Section (e.g. Squirrels, Beavers, Cubs, Scouts, Explorers)" }
+    ]},
+    { title: "Section 2: Meetings & Activities", questions: [
+        { id: "q10", text: "Appropriate enquiries (DBS/AAC) undertaken for leaders/helpers regularly attending[cite: 10]." },
+        { id: "q12", text: "Suitable supervision plan for meetings/visits, including free time[cite: 12]." },
+        { id: "q14", text: "Appropriate InTouch process in place for meetings/visits[cite: 14]." },
+        { id: "q16", text: "Medical/health details available for all people (inc adults)[cite: 16]." },
+        { id: "q18", text: "Chairs/tables stored safely in the meeting place[cite: 18]." },
+        { id: "q20", text: "Tripping/slipping hazards reduced in meeting places[cite: 20]." },
+        { id: "q22", text: "Consideration given to overhead hazards/unguarded lights[cite: 22]." },
+        { id: "q23", text: "Boundaries briefed and understood by young people[cite: 23]." },
+        { id: "q25", text: "Potential for falls on sharp objects/glass minimised[cite: 25]." },
+        { id: "q27", text: "Games suitable for age and ability of participants[cite: 27]." },
+        { id: "q28", text: "Rules of games briefed and understood by all[cite: 28]." },
+        { id: "q30", text: "All equipment used is checked and in good order[cite: 30]." },
+        { id: "q31", text: "First-aid kit accessible at all times[cite: 31]." },
+        { id: "q33", text: "Plan for emergency during meetings/visits is in place[cite: 33]." }
+    ]},
+    { title: "Section 3: Leader in Charge", questions: [
+        { id: "q36", text: "Identified leader in charge for all activities[cite: 36]." },
+        { id: "q37", text: "Leader in charge accounts for all people regularly[cite: 37]." },
+        { id: "q39", text: "Leader in charge allocates specific roles/responsibilities[cite: 39]." }
+    ]},
+    { title: "Section 4: Safety Always", questions: [
+        { id: "q42", text: "Everyone understands how to record/report incidents[cite: 42]." },
+        { id: "q43", text: "Safety discussed at planning, start of events and reviews[cite: 43]." },
+        { id: "q45", text: "Training/guidance given to all before activity/event[cite: 45]." },
+        { id: "q47", text: "Leadership team supported to gain safety knowledge[cite: 47]." },
+        { id: "q49", text: "Safety equipment in meeting place inspected regularly[cite: 49]." }
+    ]}
 ];
 
 window.handleLogin = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     try {
-        await signInWithEmailAndPassword(auth, email, pass);
+        const userCred = await signInWithEmailAndPassword(auth, email, pass);
+        const docSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
+        
+        userProgress = docSnap.exists() ? docSnap.data().responses : {};
+        document.getElementById('current-user-email').innerText = email;
+        document.getElementById('user-status').classList.remove('hidden');
         document.getElementById('auth-ui').classList.add('hidden');
         document.getElementById('audit-ui').classList.remove('hidden');
-        renderQuestions();
-    } catch (e) { alert("Login failed: Check your credentials in Project Focus 2."); }
+        renderStep();
+    } catch (e) { alert("Login Error: " + e.message); }
 };
 
-function renderQuestions() {
-    const container = document.getElementById('questions-container');
-    container.innerHTML = questions.map(q => `
-        <div id="card-${q.id}" class="bg-white p-6 rounded-xl shadow border-l-8 border-gray-300">
-            <p class="font-bold text-lg mb-3">${q.text}</p>
-            <div class="flex gap-4 mb-4">
-                <label class="cursor-pointer"><input type="radio" name="${q.id}" value="Yes" onchange="toggleBranch('${q.id}', 'Yes')"> Met</label>
-                <label class="cursor-pointer"><input type="radio" name="${q.id}" value="Partially" onchange="toggleBranch('${q.id}', 'Partially')"> Partially Met</label>
-                <label class="cursor-pointer"><input type="radio" name="${q.id}" value="No" onchange="toggleBranch('${q.id}', 'No')"> Not Met</label>
-            </div>
-            <div id="branch-${q.id}" class="hidden space-y-3 bg-red-50 p-4 rounded-lg">
-                <div>
-                    <p class="text-sm font-bold text-red-800 uppercase tracking-wide">Observation/Reasoning Required:</p>
-                    <textarea id="text-${q.id}" placeholder="Please explain..." class="w-full border p-2 rounded"></textarea>
-                </div>
-                <div>
-                    <p class="text-sm font-bold text-red-800">Target Resolution Date:</p>
-                    <p class="text-xs text-red-600 mb-1 italic font-medium underline">When do you expect this to be changed to met/meeting?</p>
-                    <input type="date" id="date-${q.id}" class="border p-2 rounded text-sm w-full md:w-auto focus:ring-2 focus:ring-red-300 outline-none">
-                </div>
-            </div>
-        </div>
-    `).join('');
+function renderStep() {
+    const section = sections[currentStep];
+    const container = document.getElementById('form-container');
+    document.getElementById('section-title').innerText = section.title;
+
+    // Update Progress UI
+    for(let i=1; i<=4; i++) {
+        const bar = document.getElementById(`prog-${i}`);
+        bar.classList.toggle('scouts-teal', i <= currentStep + 1);
+        bar.classList.toggle('bg-slate-200', i > currentStep + 1);
+    }
+
+    container.innerHTML = section.questions.map(q => {
+        const saved = userProgress[q.id] || {};
+        if (q.type === 'text') return renderTextField(q, saved);
+        if (q.type === 'select') return renderSelectField(q, saved);
+        return renderAuditQuestion(q, saved);
+    }).join('');
+
+    document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 0);
+    document.getElementById('next-btn').classList.toggle('hidden', currentStep === 3);
+    document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 3);
 }
 
-window.toggleBranch = (id, val) => {
-    const card = document.getElementById(`card-${id}`);
-    const branch = document.getElementById(`branch-${id}`);
-    if (val === 'Yes') {
-        card.className = "bg-white p-6 rounded-xl shadow met-card transition-all duration-300";
-        branch.classList.add('hidden');
-    } else {
-        card.className = "bg-white p-6 rounded-xl shadow action-card transition-all duration-300";
-        branch.classList.remove('hidden');
-    }
+window.saveField = async (id, value, type = 'status') => {
+    if (!userProgress[id]) userProgress[id] = {};
+    if (type === 'explanation') userProgress[id].explanation = value;
+    else if (type === 'deadline') userProgress[id].deadline = value;
+    else userProgress[id].status = value;
+
+    await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
+        responses: userProgress,
+        lastUpdated: new Date().toISOString()
+    }, { merge: true });
 };
 
-window.submitAudit = async () => {
-    const district = document.getElementById('district').value;
-    if (!district) return alert("Please select a District for Project FOCUS records.");
-    const results = {};
-    questions.forEach(q => {
-        const val = document.querySelector(`input[name="${q.id}"]:checked`)?.value;
-        results[q.id] = { status: val || "Unanswered", explanation: document.getElementById(`text-${q.id}`).value, deadline: document.getElementById(`date-${q.id}`).value };
-    });
-    try {
-        await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
-            details: { name: document.getElementById('name').value, district: district, group: document.getElementById('group').value, section: document.getElementById('section-name').value },
-            responses: results,
-            submittedAt: new Date().toISOString()
-        });
-        alert("Record submitted successfully to Project FOCUS!");
-    } catch (e) { alert("Submission error: " + e.message); }
+function renderAuditQuestion(q, saved) {
+    return `
+        <div class="bg-white p-6 rounded shadow ${saved.status ? (saved.status === 'Yes' ? 'met-card' : 'action-card') : 'border'}">
+            <p class="font-bold text-slate-800 mb-4">${q.text}</p>
+            <div class="flex gap-6 mb-4">
+                ${['Yes', 'Partially', 'No'].map(v => `
+                    <label class="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="radio" name="${q.id}" value="${v}" ${saved.status === v ? 'checked' : ''} 
+                        onchange="saveField('${q.id}', '${v}'); renderStep();"> ${v}
+                    </label>
+                `).join('')}
+            </div>
+            <div class="${(saved.status === 'Partially' || saved.status === 'No') ? '' : 'hidden'} space-y-4 pt-4 border-t">
+                <p class="text-xs font-bold text-red-700 uppercase">Reasoning & Target Resolution Date:</p>
+                <textarea placeholder="Please explain the issue..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full border p-3 rounded text-sm">${saved.explanation || ''}</textarea>
+                <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="border p-3 rounded text-sm w-full md:w-auto">
+            </div>
+        </div>
+    `;
+}
+
+function renderTextField(q, saved) {
+    return `
+        <div class="bg-white p-6 rounded border">
+            <label class="block font-bold text-slate-800 mb-2">${q.text}</label>
+            <input type="text" value="${saved.status || ''}" onchange="saveField('${q.id}', this.value)" class="w-full border p-3 rounded shadow-sm">
+        </div>
+    `;
+}
+
+function renderSelectField(q, saved) {
+    return `
+        <div class="bg-white p-6 rounded border">
+            <label class="block font-bold text-slate-800 mb-2">${q.text}</label>
+            <select onchange="saveField('${q.id}', this.value)" class="w-full border p-3 rounded shadow-sm">
+                <option value="">Select...</option>
+                ${q.options.map(o => `<option value="${o}" ${saved.status === o ? 'selected' : ''}>${o}</option>`).join('')}
+            </select>
+        </div>
+    `;
+}
+
+window.changeSection = (dir) => {
+    const sectionQuestions = sections[currentStep].questions;
+    const allAnswered = sectionQuestions.every(q => userProgress[q.id] && userProgress[q.id].status);
+    
+    if (dir === 1 && !allAnswered) return alert("Please complete all fields in this section to continue.");
+    
+    currentStep += dir;
+    renderStep();
+    window.scrollTo(0,0);
+};
+
+window.handleLogout = async () => {
+    await signOut(auth);
+    location.reload();
+};
+
+window.finalSubmit = async () => {
+    alert("Project FOCUS record submitted and finalized. Thank you for your commitment to safety.");
+    handleLogout();
 };
