@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Your specific config from Project Focus 2
+// UPDATED: Values from Project Focus 2 Screenshot
 const firebaseConfig = {
   apiKey: "AIzaSyCtLq8o0WyKb_R8Eff86G4XG54xp4uFYg",
   authDomain: "project-focus-2.firebaseapp.com",
@@ -17,30 +17,30 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Complete Audit Questions from the Humberside document
+// All 22 Questions from Humberside Audit 
 const questions = [
-    { id: "dbs", text: "All leaders/helpers have appropriate enquiries (DBS/AAC/Welcome Conversations)." },
-    { id: "supervision", text: "Suitable supervision plan in place for all section meetings and visits." },
-    { id: "intouch", text: "Appropriate InTouch process in place for all section meetings and visits." },
-    { id: "medical", text: "All medical and health details are available for all people (including adults)." },
-    { id: "storage", text: "Chairs and tables are stored safely in the meeting place when not in use." },
-    { id: "tripping", text: "Tripping or slipping hazards have been reduced, as far as possible." },
-    { id: "overhead", text: "Consideration given to overhead hazards and unguarded lights." },
-    { id: "boundaries", text: "Boundaries and limits are briefed and understood by all young people." },
-    { id: "falls", text: "Potential for falls on solid or sharp objects and glass has been minimised." },
-    { id: "games_age", text: "All games played are suitable for the age and ability of participants." },
-    { id: "games_rules", text: "Rules of all games played are briefed and understood by participants." },
-    { id: "equipment", text: "All equipment used by the section is checked, safe and in good order." },
-    { id: "firstaid", text: "First-aid kit available and accessible at all times." },
-    { id: "emergency", text: "Plan for what to do in an emergency during all section meetings." },
-    { id: "lic_id", text: "Identified leader in charge for all meetings, events or activities." },
-    { id: "lic_account", text: "Leader in charge ensures all adults and young people are accounted for." },
-    { id: "lic_roles", text: "Leader in charge allocates roles to specific adults." },
-    { id: "reporting", text: "Everyone understands how and when to record and report incidents." },
-    { id: "briefings", text: "Safety is discussed at the start of all events and planning meetings." },
-    { id: "guidance", text: "Young people and adults are given appropriate training and rules." },
-    { id: "slt_support", text: "Section leadership team supported to gain training/safety knowledge." },
-    { id: "inspection", text: "All safety equipment in the meeting place is inspected regularly." }
+    { id: "q1", text: "Leaders/helpers have appropriate enquiries (DBS/AAC)." },
+    { id: "q2", text: "Suitable supervision plan in place for all meetings/visits." },
+    { id: "q3", text: "Appropriate InTouch process in place." },
+    { id: "q4", text: "Medical/health details available for all people." },
+    { id: "q5", text: "Chairs and tables are stored safely." },
+    { id: "q6", text: "Tripping or slipping hazards have been reduced." },
+    { id: "q7", text: "Consideration given to overhead hazards/unguarded lights." },
+    { id: "q8", text: "Boundaries briefed and understood by young people." },
+    { id: "q9", text: "Potential for falls on sharp objects/glass minimised." },
+    { id: "q10", text: "All games played are suitable for age and ability." },
+    { id: "q11", text: "Rules of all games are briefed and understood." },
+    { id: "q12", text: "All equipment used is checked, safe and in good order." },
+    { id: "q13", text: "First-aid kit available and accessible at all times." },
+    { id: "q14", text: "Plan for what to do in an emergency is in place." },
+    { id: "q15", text: "Identified leader in charge for all meetings/activities." },
+    { id: "q16", text: "Leader in charge accounts for all people regularly." },
+    { id: "q17", text: "Leader allocates roles and responsibilities to adults." },
+    { id: "q18", text: "Everyone understands how to record/report incidents." },
+    { id: "q19", text: "Safety discussed at start of events and planning." },
+    { id: "q20", text: "Appropriate training/rules given for activities." },
+    { id: "q21", text: "Leadership team supported to gain safety knowledge." },
+    { id: "q22", text: "Safety equipment in the meeting place inspected regularly." }
 ];
 
 function renderQuestions() {
@@ -54,9 +54,9 @@ function renderQuestions() {
                 <label><input type="radio" name="${q.id}" value="No" onchange="toggleBranch('${q.id}', 'No')"> Not Met</label>
             </div>
             <div id="branch-${q.id}" class="hidden space-y-3">
-                <textarea id="text-${q.id}" placeholder="Explain the issue..." class="w-full border p-2 rounded"></textarea>
+                <textarea id="text-${q.id}" placeholder="Please explain the issue..." class="w-full border p-2 rounded"></textarea>
                 <input type="date" id="date-${q.id}" class="border p-2 rounded text-sm">
-                <p class="text-xs text-gray-400">Target Resolution Date</p>
+                <p class="text-xs text-red-500 font-medium">Target date to bring to 'Yes' status</p>
             </div>
         </div>
     `).join('');
@@ -104,7 +104,7 @@ window.submitAudit = async () => {
             section: document.getElementById('section-name').value
         },
         responses: responses,
-        timestamp: new Date()
+        submittedAt: new Date()
     });
-    alert("Audit Submitted Successfully!");
+    alert("Audit Saved Successfully!");
 };
