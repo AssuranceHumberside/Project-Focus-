@@ -2,8 +2,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// CASE-SENSITIVE CONFIG FOR PROJECT FOCUS 2
 const firebaseConfig = {
-  apiKey: "AIzaSyCtLq8oOWyKb_R8Eff86G4XG54xP49uFyg", //
+  apiKey: "AIzaSyCtLq8oOWyKb_R8Eff86G4XG54xp4uFYg", 
   authDomain: "project-focus-2.firebaseapp.com",
   projectId: "project-focus-2",
   storageBucket: "project-focus-2.firebasestorage.app",
