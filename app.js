@@ -3,7 +3,7 @@ import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/fir
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg",
+  apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg", 
   authDomain: "project-focus-2.firebaseapp.com",
   projectId: "project-focus-2",
   storageBucket: "project-focus-2.firebasestorage.app",
@@ -84,25 +84,14 @@ window.toggleBranch = (id, val) => {
 window.submitAudit = async () => {
     const district = document.getElementById('district').value;
     if (!district) return alert("Select a District!");
-
     const results = {};
     questions.forEach(q => {
         const val = document.querySelector(`input[name="${q.id}"]:checked`)?.value;
-        results[q.id] = {
-            status: val || "Unanswered",
-            explanation: document.getElementById(`text-${q.id}`).value,
-            deadline: document.getElementById(`date-${q.id}`).value
-        };
+        results[q.id] = { status: val || "Unanswered", explanation: document.getElementById(`text-${q.id}`).value, deadline: document.getElementById(`date-${q.id}`).value };
     });
-
     try {
         await setDoc(doc(db, "sectional_audits", auth.currentUser.uid), {
-            details: {
-                name: document.getElementById('name').value,
-                district: district,
-                group: document.getElementById('group').value,
-                section: document.getElementById('section-name').value
-            },
+            details: { name: document.getElementById('name').value, district: district, group: document.getElementById('group').value, section: document.getElementById('section-name').value },
             responses: results,
             submittedAt: new Date().toISOString()
         });
