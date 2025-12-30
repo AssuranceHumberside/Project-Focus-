@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// LOCKED CONFIGURATION
 const firebaseConfig = {
   apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg", 
   authDomain: "project-focus-2.firebaseapp.com",
