@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// LOCKED CONFIGURATION
 const firebaseConfig = {
   apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg", 
   authDomain: "project-focus-2.firebaseapp.com",
@@ -49,7 +48,7 @@ window.handleLogin = async () => {
         document.getElementById('auth-ui').classList.add('hidden');
         document.getElementById('audit-ui').classList.remove('hidden');
         renderQuestions();
-    } catch (e) { alert("Login Error: " + e.message); }
+    } catch (e) { alert("Login failed: Check your credentials in Project Focus 2."); }
 };
 
 function renderQuestions() {
@@ -58,13 +57,20 @@ function renderQuestions() {
         <div id="card-${q.id}" class="bg-white p-6 rounded-xl shadow border-l-8 border-gray-300">
             <p class="font-bold text-lg mb-3">${q.text}</p>
             <div class="flex gap-4 mb-4">
-                <label><input type="radio" name="${q.id}" value="Yes" onchange="toggleBranch('${q.id}', 'Yes')"> Met</label>
-                <label><input type="radio" name="${q.id}" value="Partially" onchange="toggleBranch('${q.id}', 'Partially')"> Partially Met</label>
-                <label><input type="radio" name="${q.id}" value="No" onchange="toggleBranch('${q.id}', 'No')"> Not Met</label>
+                <label class="cursor-pointer"><input type="radio" name="${q.id}" value="Yes" onchange="toggleBranch('${q.id}', 'Yes')"> Met</label>
+                <label class="cursor-pointer"><input type="radio" name="${q.id}" value="Partially" onchange="toggleBranch('${q.id}', 'Partially')"> Partially Met</label>
+                <label class="cursor-pointer"><input type="radio" name="${q.id}" value="No" onchange="toggleBranch('${q.id}', 'No')"> Not Met</label>
             </div>
-            <div id="branch-${q.id}" class="hidden space-y-3">
-                <textarea id="text-${q.id}" placeholder="Explain the issue..." class="w-full border p-2 rounded"></textarea>
-                <input type="date" id="date-${q.id}" class="border p-2 rounded text-sm">
+            <div id="branch-${q.id}" class="hidden space-y-3 bg-red-50 p-4 rounded-lg">
+                <div>
+                    <p class="text-sm font-bold text-red-800 uppercase tracking-wide">Observation/Reasoning Required:</p>
+                    <textarea id="text-${q.id}" placeholder="Please explain..." class="w-full border p-2 rounded"></textarea>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-red-800">Target Resolution Date:</p>
+                    <p class="text-xs text-red-600 mb-1 italic font-medium underline">When do you expect this to be changed to met/meeting?</p>
+                    <input type="date" id="date-${q.id}" class="border p-2 rounded text-sm w-full md:w-auto focus:ring-2 focus:ring-red-300 outline-none">
+                </div>
             </div>
         </div>
     `).join('');
@@ -74,28 +80,28 @@ window.toggleBranch = (id, val) => {
     const card = document.getElementById(`card-${id}`);
     const branch = document.getElementById(`branch-${id}`);
     if (val === 'Yes') {
-        card.className = "bg-white p-6 rounded-xl shadow met-card";
+        card.className = "bg-white p-6 rounded-xl shadow met-card transition-all duration-300";
         branch.classList.add('hidden');
     } else {
-        card.className = "bg-white p-6 rounded-xl shadow action-card";
+        card.className = "bg-white p-6 rounded-xl shadow action-card transition-all duration-300";
         branch.classList.remove('hidden');
     }
 };
 
 window.submitAudit = async () => {
     const district = document.getElementById('district').value;
-    if (!district) return alert("Select a District!");
+    if (!district) return alert("Please select a District for Project FOCUS records.");
     const results = {};
     questions.forEach(q => {
         const val = document.querySelector(`input[name="${q.id}"]:checked`)?.value;
         results[q.id] = { status: val || "Unanswered", explanation: document.getElementById(`text-${q.id}`).value, deadline: document.getElementById(`date-${q.id}`).value };
     });
     try {
-        await setDoc(doc(db, "sectional_audits", auth.currentUser.uid), {
+        await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
             details: { name: document.getElementById('name').value, district: district, group: document.getElementById('group').value, section: document.getElementById('section-name').value },
             responses: results,
             submittedAt: new Date().toISOString()
         });
-        alert("Audit Submitted Successfully!");
-    } catch (e) { alert("Error: " + e.message); }
+        alert("Record submitted successfully to Project FOCUS!");
+    } catch (e) { alert("Submission error: " + e.message); }
 };
