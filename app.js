@@ -4,7 +4,7 @@ import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10
 
 // 1. Connection (Project Focus 2)
 const firebaseConfig = {
-  apiKey: "AIzaSyCtLq8oOWyKb_R8Eff86G4XG54xp4uFYg",
+  apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg",
   authDomain: "project-focus-2.firebaseapp.com",
   projectId: "project-focus-2",
   storageBucket: "project-focus-2.firebasestorage.app",
