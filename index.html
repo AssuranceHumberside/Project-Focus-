@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Humberside Scout Safety Audit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div id="auth-container" class="max-w-md mx-auto bg-white p-6 rounded shadow">
+        <h2 class="text-2xl font-bold mb-4">Login</h2>
+        <input type="email" id="email" placeholder="Email" class="w-full border p-2 mb-2">
+        <input type="password" id="password" placeholder="Password" class="w-full border p-2 mb-4">
+        <button onclick="login()" class="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
+    </div>
+
+    <div id="audit-container" class="hidden max-w-4xl mx-auto bg-white p-8 rounded shadow">
+        <h1 class="text-3xl font-bold mb-6">Safety Audit [cite: 1]</h1>
+        
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4 underline">Section 1 — Basic Details </h2>
+            <input type="text" id="name" placeholder="Name" class="border p-2 mr-2"> [cite: 4]
+            <input type="text" id="group" placeholder="Group" class="border p-2"> [cite: 7]
+        </div>
+
+        <div class="mb-6 p-4 border-l-4 border-blue-500">
+            <p class="font-medium">1. All leaders/helpers have appropriate enquiries (DBS/AAC). [cite: 10]</p>
+            <div class="mt-2">
+                <label><input type="radio" name="q1" value="Yes" onclick="toggleBranch('q1', false)"> Yes</label>
+                <label class="ml-4"><input type="radio" name="q1" value="No" onclick="toggleBranch('q1', true)"> No</label>
+                <label class="ml-4"><input type="radio" name="q1" value="Partially" onclick="toggleBranch('q1', true)"> Partially</label> [cite: 11]
+            </div>
+            
+            <div id="q1-branch" class="hidden mt-4 bg-yellow-50 p-3">
+                <p class="text-sm text-red-600 font-bold">Explanation Required: </p>
+                <textarea id="q1-explain" placeholder="Describe the issue..." class="w-full border p-2 mb-2"></textarea>
+                <p class="text-sm text-red-600 font-bold">Expected Resolution Date: </p>
+                <input type="date" id="q1-date" class="border p-2">
+            </div>
+        </div>
+
+        <button onclick="saveAudit()" class="bg-green-600 text-white px-6 py-2 rounded">Save Progress</button>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
