@@ -21,7 +21,7 @@ const districtList = [
 ];
 
 async function loadData() {
-    const querySnapshot = await getDocs(collection(db, "sectional_audits"));
+    const querySnapshot = await getDocs(collection(db, "project_focus_records"));
     allAudits = querySnapshot.docs.map(doc => doc.data());
     showDistricts();
 }
@@ -39,11 +39,11 @@ window.showDistricts = () => {
         ).length;
 
         return `
-            <div onclick="showDetails('${district}')" class="cursor-pointer bg-white p-6 rounded-xl shadow hover:border-purple-500 border-2 transition-all ${actionItems > 0 ? 'bg-red-50' : 'bg-green-50'}">
-                <h3 class="font-bold text-lg text-purple-900">${district}</h3>
-                <p class="text-sm text-gray-600">${districtAudits.length} Audits</p>
-                <p class="text-sm font-bold ${actionItems > 0 ? 'text-red-600' : 'text-green-600'}">
-                    ${actionItems} Action Required
+            <div onclick="showDetails('${district}')" class="cursor-pointer bg-white p-6 rounded-xl shadow hover:border-teal-500 border-2 transition-all ${actionItems > 0 ? 'bg-red-50' : 'bg-teal-50'}">
+                <h3 class="font-bold text-lg text-teal-900">${district}</h3>
+                <p class="text-sm text-slate-600">${districtAudits.length} Records</p>
+                <p class="text-sm font-bold ${actionItems > 0 ? 'text-red-600' : 'text-teal-600'}">
+                    ${actionItems} Requiring Support
                 </p>
             </div>
         `;
@@ -54,7 +54,7 @@ window.showDetails = (district) => {
     document.getElementById('district-view').classList.add('hidden');
     document.getElementById('detail-view').classList.remove('hidden');
     document.getElementById('back-btn').classList.remove('hidden');
-    document.getElementById('detail-title').innerText = district;
+    document.getElementById('detail-title').innerText = `Project FOCUS Detail: ${district}`;
 
     const districtAudits = allAudits.filter(a => a.details.district === district);
     const tableBody = document.getElementById('detail-table-body');
@@ -62,16 +62,16 @@ window.showDetails = (district) => {
     tableBody.innerHTML = districtAudits.map(a => {
         let issues = [];
         for (const [qId, res] of Object.entries(a.responses)) {
-            if (res.status !== "Yes") issues.push(`- ${res.explanation}`);
+            if (res.status !== "Yes") issues.push(`- ${res.explanation} (Due: ${res.deadline})`);
         }
 
         return `
             <tr class="border-b">
-                <td class="p-4 font-bold text-purple-900">${a.details.group} - ${a.details.section}</td>
-                <td class="p-4 font-bold ${issues.length > 0 ? 'text-red-600' : 'text-green-600'}">
-                    ${issues.length > 0 ? 'ACTION' : 'MET'}
+                <td class="p-4 font-bold text-teal-900">${a.details.group} - ${a.details.section}</td>
+                <td class="p-4 font-bold ${issues.length > 0 ? 'text-red-600' : 'text-teal-600'} uppercase text-xs">
+                    ${issues.length > 0 ? 'Action Needed' : 'Compliance Met'}
                 </td>
-                <td class="p-4 text-xs italic">${issues.join('<br>') || 'All Standards Met'}</td>
+                <td class="p-4 text-xs italic text-slate-600">${issues.join('<br>') || 'Full adherence to Scouts POR.'}</td>
             </tr>
         `;
     }).join('');
