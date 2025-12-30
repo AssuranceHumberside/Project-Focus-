@@ -3,30 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Humberside Scouts Safety Audit</title>
+    <title>Project FOCUS - Humberside Scouts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .hidden { display: none; }
         .met-card { border-left: 8px solid #10b981; background-color: #f0fdf4; }
         .action-card { border-left: 8px solid #ef4444; background-color: #fef2f2; }
+        .focus-teal { background-color: #00857a; } /* Matches Project FOCUS header */
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4">
-    <div id="auth-ui" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg mt-10">
-        <h2 class="text-2xl font-bold mb-6 text-center text-purple-900">Safety Audit Login</h2>
-        <input type="email" id="email" placeholder="Email" class="w-full border p-3 mb-3 rounded focus:ring-2 focus:ring-purple-500 outline-none">
-        <input type="password" id="password" placeholder="Password" class="w-full border p-3 mb-6 rounded focus:ring-2 focus:ring-purple-500 outline-none">
-        <button onclick="handleLogin()" class="w-full bg-purple-800 text-white py-3 rounded-lg font-bold hover:bg-purple-900 transition-colors">Sign In</button>
+<body class="bg-slate-100 min-h-screen">
+
+    <div id="auth-ui" class="max-w-4xl mx-auto pt-10 px-4">
+        <div class="focus-teal text-white p-8 rounded-t-xl shadow-lg">
+            <h1 class="text-4xl font-bold mb-2 text-white">Project FOCUS</h1>
+            <p class="text-xl opacity-90 italic text-white">Fostering Ongoing Compliance and Understanding of Safety</p>
+        </div>
+        <div class="bg-white p-8 rounded-b-xl shadow-lg grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4 text-slate-700">
+                <h2 class="text-2xl font-bold text-slate-800">Welcome to Project FOCUS</h2>
+                <p class="text-sm leading-relaxed">This is our dedicated initiative to ensure the highest standards of safety across the county. Within Project FOCUS, we are committed to making sure that every Section, Group, and District adheres to The Scouts' Policy Organisation and Rules (POR).</p>
+                <div class="bg-yellow-100 p-4 border-l-4 border-yellow-500 rounded text-sm italic">
+                    "Can you be sure that all Sections, Groups, and Districts that are run within the County are safe?"
+                </div>
+            </div>
+            <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Assurance Login</h3>
+                <input type="email" id="email" placeholder="Email" class="w-full border p-3 mb-3 rounded focus:ring-2 focus:ring-teal-500 outline-none">
+                <input type="password" id="password" placeholder="Password" class="w-full border p-3 mb-6 rounded focus:ring-2 focus:ring-teal-500 outline-none">
+                <button onclick="handleLogin()" class="w-full bg-teal-700 text-white py-3 rounded-lg font-bold hover:bg-teal-800 transition-colors">Sign In</button>
+            </div>
+        </div>
     </div>
 
-    <div id="audit-ui" class="hidden max-w-4xl mx-auto space-y-6 pb-20">
-        <div class="bg-purple-900 text-white p-8 rounded-xl shadow-md">
-            <h1 class="text-3xl font-bold italic">Humberside Scouts</h1>
-            <h2 class="text-xl font-semibold opacity-90 text-yellow-400">Sectional Safety Audit</h2>
+    <div id="audit-ui" class="hidden max-w-4xl mx-auto py-10 px-4 space-y-6">
+        <div class="focus-teal text-white p-8 rounded-xl shadow-md">
+            <h1 class="text-3xl font-bold">Project FOCUS</h1>
+            <h2 class="text-xl font-semibold opacity-90 text-yellow-400">Sectional Safety Assurance</h2>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow border-t-4 border-purple-800">
-            <h2 class="text-xl font-bold mb-4">Section 1: Basic Details</h2>
+        <div class="bg-white p-6 rounded-xl shadow border-l-4 border-teal-600 italic text-slate-700">
+            <p>Naturally, we need help to answer our safety commitment in a positive way and we're going to need everyone's support to achieve this. That's where Project FOCUS was born.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow border-t-4 border-teal-800">
+            <h2 class="text-xl font-bold mb-4 text-teal-900">Section 1: Basic Details</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" id="name" placeholder="Name" class="border p-2 rounded">
                 <select id="district" class="border p-2 rounded">
@@ -45,9 +66,12 @@
                 <input type="text" id="section-name" placeholder="Section (e.g. Scouts)" class="border p-2 rounded">
             </div>
         </div>
+
         <div id="questions-container" class="space-y-4"></div>
-        <button onclick="submitAudit()" class="w-full bg-green-600 text-white py-5 rounded-xl text-2xl font-bold shadow-xl hover:bg-green-700">Submit Audit to SME</button>
+
+        <button onclick="submitAudit()" class="w-full bg-teal-700 text-white py-5 rounded-xl text-2xl font-bold shadow-xl hover:bg-teal-800">Submit to Project FOCUS</button>
     </div>
+
     <script type="module" src="app.js"></script>
 </body>
 </html>
