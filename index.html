@@ -8,52 +8,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --scout-teal: #003945; --scout-purple: #7413dc; --scout-yellow: #ffe627; }
-        body { font-family: 'Nunito Sans', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Nunito Sans', sans-serif; background-color: #f8fafc; margin: 0; }
         .scout-gradient { background: linear-gradient(135deg, var(--scout-teal) 0%, #001a20 100%); }
         .hidden { display: none !important; }
-        /* Fixes the giant logo issue */
-        .logo-container img { height: 80px; width: auto; object-fit: contain; }
-        .hero-banner { background-color: #008486; } /* Matching the teal banner */
+        .hero-banner { background-color: #008486; }
+        .card-focus { border-left: 6px solid #cbd5e1; transition: all 0.2s; background: white; border-radius: 1.5rem; }
+        .met-card { border-left-color: var(--scout-teal); background: #f1f5f9; }
+        .action-card { border-left-color: #ed3f23; }
+        .progress-pill { height: 6px; border-radius: 99px; background: #e2e8f0; transition: all 0.4s ease; }
+        .progress-active { background: var(--scout-teal); box-shadow: 0 0 10px rgba(0, 57, 69, 0.3); }
     </style>
 </head>
 <body class="text-slate-800">
     <header class="bg-white py-4 border-b">
         <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
-            <div class="logo-container">
-                <img src="Humberside Logo.png" alt="Humberside Scouts">
-            </div>
-            <button id="logout-btn" onclick="handleLogout()" class="hidden bg-[#7413dc] text-white px-6 py-2 rounded-lg font-black uppercase text-xs tracking-widest shadow-md">Logout</button>
+            <img src="Humberside Logo.png" alt="Humberside Scouts" class="h-16 w-auto">
+            <button id="logout-btn" onclick="handleLogout()" class="hidden bg-[#7413dc] text-white px-6 py-2 rounded-lg font-black uppercase text-xs shadow-md">Logout</button>
         </div>
     </header>
 
     <section id="banner-section" class="hero-banner text-white py-12">
         <div class="max-w-6xl mx-auto px-6">
-            <h1 class="text-5xl font-black italic uppercase tracking-tighter mb-2">Project FOCUS</h1>
-            <p class="text-xl font-bold italic">Fostering Ongoing Compliance and Understanding of Safety</p>
-            <p class="text-sm mt-2 opacity-90 italic">Humberside's drive on Assurance – ensuring we know what Safety looks like in our County</p>
+            <h1 class="text-5xl font-black italic uppercase tracking-tighter mb-2 text-white">Project FOCUS</h1>
+            <p class="text-xl font-bold italic text-white">Fostering Ongoing Compliance and Understanding of Safety</p>
         </div>
     </section>
 
     <main class="max-w-6xl mx-auto px-6 py-12">
-        <div id="landing-page" class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div id="landing-page-content" class="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div class="bg-[#ffe627] p-10 rounded-sm shadow-sm border-b-4 border-yellow-500">
                 <h2 class="text-3xl font-black text-[#003945] mb-6 uppercase">Why do we need to do this?</h2>
-                <p class="text-[#003945] font-bold text-sm leading-relaxed mb-4">As a County Team we have to answer the following question and demonstrate our assurance to HQ.</p>
-                <p class="text-[#003945] italic font-black text-sm border-l-4 border-[#003945] pl-4 mb-4">"Can you be sure that all Sections, Groups, Districts, Campsites and Activities that are run within the County are safe, have adequate written risk assessments and sufficient safety planning...?"</p>
-                <p class="text-[#003945] font-bold text-sm">Naturally, we need help to answer this in a positive way and we're going to need everyone's support to achieve this. That's where Project FOCUS was born.</p>
+                <p class="text-[#003945] font-bold text-sm leading-relaxed mb-4">Demonstrating our assurance to HQ that every Section and Group is safe.</p>
             </div>
 
-            <div id="auth-ui" class="bg-white p-10 rounded-sm shadow-xl border border-slate-100">
-                <h2 id="auth-title" class="text-3xl font-black text-[#003945] mb-2 uppercase italic leading-none">Volunteer Portal</h2>
-                <p class="text-slate-500 mb-8 font-medium text-sm">Sign in to access your Section Safety Audits.</p>
-                
-                <div id="auth-form" class="space-y-4">
-                    <input type="email" id="email" placeholder="Email Address" class="w-full px-6 py-4 bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-teal-700 font-bold">
-                    <input type="password" id="password" placeholder="Password" class="w-full px-6 py-4 bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-teal-700 font-bold">
-                    
-                    <div id="register-fields" class="hidden space-y-4 pt-4">
+            <div id="auth-ui" class="bg-white p-10 rounded-sm shadow-xl border">
+                <h2 id="auth-title" class="text-3xl font-black text-[#003945] mb-2 uppercase italic">Volunteer Portal</h2>
+                <div class="space-y-4">
+                    <input type="email" id="email" placeholder="Email Address" class="w-full px-6 py-4 bg-slate-50 border outline-none font-bold">
+                    <input type="password" id="password" placeholder="Password" class="w-full px-6 py-4 bg-slate-50 border outline-none font-bold">
+                    <div id="register-fields" class="hidden space-y-4">
                         <input type="text" id="reg-name" placeholder="Full Name" class="w-full px-6 py-4 bg-slate-50 border font-bold">
-                        <select id="reg-district" class="w-full px-6 py-4 bg-slate-50 border font-black text-slate-500 uppercase text-xs tracking-widest">
+                        <select id="reg-district" class="w-full px-6 py-4 bg-slate-50 border font-black text-slate-500 uppercase text-xs">
                             <option value="" disabled selected>Select District...</option>
                             <option>Beverley and Hornsea</option><option>Blacktoft Beacon</option><option>City of Hull</option>
                             <option>County Section</option><option>Grimsby and Cleethorpes</option><option>North Lincolnshire</option>
@@ -61,32 +56,57 @@
                         </select>
                         <input type="text" id="reg-group" placeholder="Scout Group" class="w-full px-6 py-4 bg-slate-50 border font-bold">
                     </div>
-
-                    <button id="login-btn" onclick="handleLogin()" class="w-full hero-banner text-white py-5 font-black uppercase tracking-widest shadow-lg hover:opacity-90 transition-all">Sign In</button>
-                    <button id="register-btn" onclick="handleRegister()" class="hidden w-full bg-[#7413dc] text-white py-5 font-black uppercase tracking-widest shadow-lg hover:opacity-90 transition-all">Create Account</button>
-                    
-                    <div class="flex justify-between items-center mt-6">
-                        <button onclick="handleForgotPassword()" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-teal-700">Forgot Password?</button>
-                        <button onclick="toggleAuthMode()" id="toggle-link" class="text-[10px] font-black uppercase tracking-widest text-teal-700 hover:underline">Need an account? Register here</button>
+                    <button id="login-btn" onclick="handleLogin()" class="w-full bg-[#008486] text-white py-5 font-black uppercase tracking-widest shadow-lg">Sign In</button>
+                    <button id="register-btn" onclick="handleRegister()" class="hidden w-full bg-[#7413dc] text-white py-5 font-black uppercase tracking-widest shadow-lg">Create Account</button>
+                    <div class="flex justify-between mt-6">
+                        <button onclick="handleForgotPassword()" class="text-[10px] font-black uppercase text-slate-400">Forgot Password?</button>
+                        <button onclick="toggleAuthMode()" id="toggle-link" class="text-[10px] font-black uppercase text-teal-700">Register here</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="landing-dashboard" class="hidden">
+            <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border mb-12">
+                <h2 class="text-3xl font-black text-[#003945] mb-4 uppercase italic">Welcome to Project Focus</h2>
+                <p class="text-slate-600 font-medium">Please select your required audit below.</p>
             </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div onclick="startAudit()" class="cursor-pointer bg-white p-8 rounded-[2rem] shadow-lg border-b-8 border-teal-600 hover:scale-[1.03] transition-all">
+                    <h3 class="font-black text-[#003945] uppercase italic text-xl mb-2">Section Audit</h3>
+                    <span class="bg-[#003945] text-white px-6 py-2 rounded-full text-[10px] font-black uppercase">Enter Audit</span>
+                </div>
+                <div class="opacity-50 grayscale bg-white p-8 rounded-[2rem] border-b-8 border-slate-300">
+                    <h3 class="font-black text-slate-400 uppercase italic text-xl">Campsite Audit (Soon)</h3>
+                </div>
+            </div>
+        </div>
 
         <div id="audit-ui" class="hidden max-w-xl mx-auto">
+            <div id="progress-container" class="flex gap-2 mb-12">
+                <div id="prog-1" class="progress-pill flex-1"></div>
+                <div id="prog-2" class="progress-pill flex-1"></div>
+                <div id="prog-3" class="progress-pill flex-1"></div>
+                <div id="prog-4" class="progress-pill flex-1"></div>
+                <div id="prog-5" class="progress-pill flex-1"></div>
             </div>
+            <h2 id="section-title" class="text-3xl font-black text-[#003945] uppercase italic mb-8"></h2>
+            <div id="form-container" class="space-y-6"></div>
+            <div class="flex justify-between pt-10 border-t mt-10">
+                <button id="prev-btn" onclick="changeSection(-1)" class="hidden text-slate-400 font-black uppercase text-xs">Previous</button>
+                <button id="next-btn" onclick="changeSection(1)" class="ml-auto bg-[#008486] text-white px-10 py-4 rounded-2xl font-black uppercase">Next Section</button>
+                <button id="submit-btn" onclick="finalSubmit()" class="hidden ml-auto bg-[#7413dc] text-white px-10 py-4 rounded-2xl font-black uppercase">Finish Audit</button>
+            </div>
+        </div>
 
-        <div id="thank-you-ui" class="hidden text-center py-20 max-w-xl mx-auto">
+        <div id="thank-you-ui" class="hidden text-center py-20">
             <h2 class="text-4xl font-black text-[#003945] uppercase italic mb-4">Audit Logged</h2>
-            <button onclick="location.reload()" class="hero-banner text-white px-10 py-4 font-black uppercase tracking-widest shadow-xl">Back to Dashboard</button>
+            <button onclick="location.reload()" class="bg-[#008486] text-white px-10 py-4 font-black uppercase">Dashboard</button>
         </div>
     </main>
 
-    <div id="county-alert" class="bg-[#ed3f23] text-white py-4 text-center font-black uppercase italic tracking-tighter text-xl">
-        THINK - If it doesn't look safe, or it doesn't feel safe - STOP IT!
+    <div id="footer-alert" class="bg-[#ed3f23] text-white py-4 text-center font-black uppercase italic tracking-tighter text-xl">
+        THINK - If it doesn't look safe - STOP IT!
     </div>
 
     <script type="module" src="app.js"></script>
