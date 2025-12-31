@@ -18,7 +18,6 @@ const db = getFirestore(app);
 let currentStep = 0;
 let userProgress = {};
 let profileData = {};
-let auditTrail = {};
 
 const sections = [
     { title: "People & Training", questions: [
@@ -69,8 +68,13 @@ const sections = [
 ];
 
 window.handleLogin = async () => {
-    const email = document.getElementById('email').value.trim();
-    const pass = document.getElementById('password').value;
+    const emailInput = document.getElementById('email');
+    const passInput = document.getElementById('password');
+    if (!emailInput || !passInput) return;
+
+    const email = emailInput.value.trim();
+    const pass = passInput.value;
+
     try {
         const userCred = await signInWithEmailAndPassword(auth, email, pass);
         const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
@@ -85,36 +89,30 @@ window.handleLogin = async () => {
         const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
         if (recordSnap.exists()) {
             userProgress = recordSnap.data().responses || {};
-            auditTrail = recordSnap.data().trail || {};
             currentStep = recordSnap.data().lastStep || 0;
         }
         
-        document.getElementById('banner-section').classList.add('hidden');
-        document.getElementById('landing-page-content').classList.add('hidden');
-        document.getElementById('footer-alert').classList.add('hidden');
-        document.getElementById('logout-btn').classList.remove('hidden');
-        document.getElementById('landing-dashboard').classList.remove('hidden');
+        // SUCCESS UI SWITCH WITH NULL CHECKS
+        document.getElementById('banner-section')?.classList.add('hidden');
+        document.getElementById('landing-page-content')?.classList.add('hidden');
+        document.getElementById('footer-alert')?.classList.add('hidden');
+        
+        document.getElementById('logout-btn')?.classList.remove('hidden');
+        document.getElementById('landing-dashboard')?.classList.remove('hidden');
     } catch (e) { alert("Login Error: " + e.message); }
 };
 
-window.handleForgotPassword = async () => {
-    const email = document.getElementById('email').value.trim();
-    if (!email) return alert("Enter email address first.");
-    try {
-        await sendPasswordResetEmail(auth, email);
-        alert("A password reset link has been sent to your email.");
-    } catch (e) { alert("Error: " + e.message); }
-};
-
 window.startAudit = () => {
-    document.getElementById('landing-dashboard').classList.add('hidden');
-    document.getElementById('audit-ui').classList.remove('hidden');
+    document.getElementById('landing-dashboard')?.classList.add('hidden');
+    document.getElementById('audit-ui')?.classList.remove('hidden');
     renderStep();
 };
 
 window.renderStep = () => {
     const section = sections[currentStep];
     const container = document.getElementById('form-container');
+    if (!section || !container) return;
+
     document.getElementById('section-title').innerText = section.title;
     
     for(let i=1; i<=5; i++) {
@@ -141,53 +139,52 @@ window.renderStep = () => {
             </div>`;
     }).join('');
 
-    document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 0);
-    document.getElementById('next-btn').classList.toggle('hidden', currentStep === 4);
-    document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 4);
+    document.getElementById('prev-btn')?.classList.toggle('hidden', currentStep === 0);
+    document.getElementById('next-btn')?.classList.toggle('hidden', currentStep === 4);
+    document.getElementById('submit-btn')?.classList.toggle('hidden', currentStep !== 4);
 };
 
 window.saveField = async (id, value, type = 'status') => {
     if (!userProgress[id]) userProgress[id] = {};
-    if (type === 'status' && value === 'Yes' && userProgress[id].status && userProgress[id].status !== 'Yes') {
-        if (!auditTrail[id]) auditTrail[id] = [];
-        auditTrail[id].push({ from: userProgress[id].status, to: 'Yes', date: new Date().toISOString() });
-    }
     userProgress[id][type] = value;
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
-        responses: userProgress, trail: auditTrail, lastStep: currentStep, lastUpdated: new Date().toISOString()
+        responses: userProgress, lastStep: currentStep, lastUpdated: new Date().toISOString()
     }, { merge: true });
     if (type === 'status') renderStep();
 };
 
 window.changeSection = async (dir) => { 
     currentStep += dir; 
-    await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), { lastStep: currentStep }, { merge: true });
+    if (auth.currentUser) {
+        await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), { lastStep: currentStep }, { merge: true });
+    }
     renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); 
 };
 
 window.finalSubmit = () => {
-    document.getElementById('audit-ui').classList.add('hidden');
-    document.getElementById('thank-you-ui').classList.remove('hidden');
+    document.getElementById('audit-ui')?.classList.add('hidden');
+    document.getElementById('thank-you-ui')?.classList.remove('hidden');
 };
 
-window.backToDashboard = () => {
-    document.getElementById('thank-you-ui').classList.add('hidden');
-    document.getElementById('landing-dashboard').classList.remove('hidden');
+window.handleForgotPassword = async () => {
+    const email = document.getElementById('email')?.value.trim();
+    if (!email) return alert("Enter email.");
+    try { await sendPasswordResetEmail(auth, email); alert("Reset link sent."); } catch (e) { alert(e.message); }
 };
 
 window.toggleAuthMode = () => {
-    const isLogin = document.getElementById('auth-title').innerText === "VOLUNTEER PORTAL";
+    const isLogin = document.getElementById('auth-title')?.innerText === "VOLUNTEER PORTAL";
     document.getElementById('auth-title').innerText = isLogin ? "JOIN PROJECT FOCUS" : "VOLUNTEER PORTAL";
-    document.getElementById('register-fields').classList.toggle('hidden');
-    document.getElementById('login-btn').classList.toggle('hidden');
-    document.getElementById('register-btn').classList.toggle('hidden');
+    document.getElementById('register-fields')?.classList.toggle('hidden');
+    document.getElementById('login-btn')?.classList.toggle('hidden');
+    document.getElementById('register-btn')?.classList.toggle('hidden');
 };
 
 window.handleRegister = async () => {
-    const email = document.getElementById('email').value.trim();
+    const email = document.getElementById('email')?.value.trim();
     const profile = {
-        email: email, name: document.getElementById('reg-name').value,
-        district: document.getElementById('reg-district').value, group: document.getElementById('reg-group').value,
+        email: email, name: document.getElementById('reg-name')?.value,
+        district: document.getElementById('reg-district')?.value, group: document.getElementById('reg-group')?.value,
         isVerified: false
     };
     try {
