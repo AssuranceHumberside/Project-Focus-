@@ -33,18 +33,14 @@ const questionMap = {
     "q43": "Is safety a standard talking point in post-activity reviews?"
 };
 
-// Admin Login Logic
 window.handleAdminLogin = async () => {
     const email = document.getElementById('admin-email').value;
     const pass = document.getElementById('admin-password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) { 
-        alert("Login Denied: Use an authorized SME account. Questions? Contact assurance@humbersidescouts.org.uk"); 
-    }
+    } catch (e) { alert("Login Failed"); }
 };
 
-// Monitor Auth State for Posh Dashboard Unlock
 onAuthStateChanged(auth, (user) => {
     if (user && user.email === 'tom.harrison@humbersidescouts.org.uk') {
         document.getElementById('admin-auth-ui').classList.add('hidden');
@@ -61,15 +57,13 @@ async function loadAdminData() {
             getDocs(collection(db, "users"))
         ]);
         
+        // Map data including the document ID (UID)
         allAuditData = auditSnap.docs.map(d => ({uid: d.id, ...d.data()}));
         allUserProfiles = userSnap.docs.map(d => ({uid: d.id, ...d.data()}));
 
         renderGrid();
         renderUserList();
-    } catch (err) { 
-        console.error("Data Sync Error:", err);
-        alert("Database connection failed. Ensure rules allow SME access."); 
-    }
+    } catch (err) { console.error(err); }
 }
 
 function renderGrid() {
@@ -87,7 +81,7 @@ function renderGrid() {
         ).length;
 
         return `
-            <div onclick="showDistrictDetails('${district}')" class="cursor-pointer bg-white p-8 rounded-[2rem] shadow-xl border-b-8 transition-all hover:scale-[1.03] ${redFlags > 0 ? 'border-red-500 shadow-red-100' : 'border-emerald-500 shadow-emerald-50'}">
+            <div onclick="showDistrictDetails('${district}')" class="cursor-pointer bg-white p-8 rounded-[2rem] shadow-xl border-b-8 transition-all hover:scale-[1.03] ${redFlags > 0 ? 'border-red-500' : 'border-emerald-500'}">
                 <h3 class="font-black text-xl text-[#003945] uppercase italic tracking-tighter mb-1">${district}</h3>
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${districtAudits.length} Units Audited</p>
                 <div class="mt-6 flex justify-between items-end">
@@ -109,6 +103,7 @@ window.showDistrictDetails = (district) => {
     
     const tbody = document.getElementById('response-table-body');
     tbody.innerHTML = auditsInDistrict.map(a => {
+        // CROSS-REFERENCE FIX: Get the email from the user profile
         const profile = allUserProfiles.find(u => u.uid === a.uid) || {};
         let issues = [];
         const res = a.responses || {};
@@ -130,10 +125,12 @@ window.showDistrictDetails = (district) => {
         return `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-10 align-top border-r w-1/3">
-                    <div class="font-black text-[#003945] text-2xl uppercase leading-none mb-2 tracking-tighter italic">${profile.group || 'N/A'}</div>
-                    <div class="text-[11px] font-black text-purple-700 bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-4 border border-purple-100">${profile.section || 'N/A'}</div>
+                    <div class="font-black text-[#003945] text-2xl uppercase leading-none mb-2 tracking-tighter italic">${profile.group || 'Unknown Group'}</div>
+                    <div class="text-[11px] font-black text-purple-700 bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-8 border border-purple-100">${profile.section || 'Unknown Section'}</div>
                     <div class="pt-6 border-t border-slate-100">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 underline decoration-teal-500">${profile.email || 'Email Not Recorded'}</span>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Email Address:</span>
+                        <div class="text-xs font-black text-teal-700 mb-3 break-all">${profile.email || a.email || 'Email Not Found'}</div>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Auditor:</span>
                         <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${profile.name || 'Anonymous'}</div>
                     </div>
                 </td>
@@ -150,7 +147,7 @@ window.renderUserList = () => {
     tbody.innerHTML = pending.length ? pending.map(u => `
         <tr class="hover:bg-slate-50 transition-all">
             <td class="p-6">
-                <div class="font-bold text-[#003945] mb-1 underline decoration-yellow-400">${u.email || 'Missing Email'}</div>
+                <div class="font-black text-[#003945] mb-1 underline decoration-[#ffe627]">${u.email || 'Missing Email'}</div>
                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">${new Date(u.createdAt).toLocaleDateString()}</div>
             </td>
             <td class="p-6">
@@ -158,18 +155,17 @@ window.renderUserList = () => {
                 <div class="text-sm font-black text-slate-700 uppercase">${u.group} - ${u.section}</div>
             </td>
             <td class="p-6 text-right">
-                <button onclick="verifyUser('${u.uid}')" class="scout-gradient text-white text-[10px] font-black uppercase px-6 py-2 rounded-full shadow-lg hover:shadow-teal-900/20 transition-all">Approve Access</button>
+                <button onclick="verifyUser('${u.uid}')" class="scout-gradient text-white text-[10px] font-black uppercase px-6 py-2 rounded-full shadow-lg">Approve Access</button>
             </td>
         </tr>`).join('') : `<tr><td colspan="3" class="p-20 text-center text-slate-300 italic font-bold">The verification queue is clear.</td></tr>`;
 };
 
 window.verifyUser = async (uid) => {
     try {
-        const userRef = doc(db, "users", uid);
-        await updateDoc(userRef, { isVerified: true });
-        alert("Success: Auditor can now log in.");
+        await updateDoc(doc(db, "users", uid), { isVerified: true });
+        alert("Verification successful.");
         await loadAdminData();
-    } catch (e) { alert("Error approving user: Check database connection."); }
+    } catch (e) { alert("Error approving user."); }
 };
 
 window.switchTab = (tab) => {
