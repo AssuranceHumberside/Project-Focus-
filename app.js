@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -68,28 +68,23 @@ const sections = [
     ]}
 ];
 
-// Attach functions to window to ensure HTML accessibility
 window.renderStep = () => {
     const section = sections[currentStep];
     const formContainer = document.getElementById('form-container');
     const metContainer = document.getElementById('met-container');
     const metDropdown = document.getElementById('met-dropdown');
-    
     document.getElementById('section-title').innerText = section.title;
     for(let i=1; i<=5; i++) {
         const pill = document.getElementById(`prog-${i}`);
         if(pill) pill.classList.toggle('progress-active', i <= currentStep + 1);
     }
-
     formContainer.innerHTML = "";
     metContainer.innerHTML = "";
     let metCount = 0;
-
     section.questions.forEach(q => {
         const saved = userProgress[q.id] || {};
         const isMet = saved.status === 'Yes';
         const isIssue = saved.status === 'Partially' || saved.status === 'No';
-        
         const html = `
             <div class="bg-white p-8 card-focus ${isMet ? 'met-card' : (saved.status ? 'action-card' : '')}">
                 <p class="font-bold text-lg text-slate-800 mb-6 leading-tight">${q.text}</p>
@@ -101,18 +96,15 @@ window.renderStep = () => {
                     `).join('')}
                 </div>
                 <div class="${isIssue ? '' : 'hidden'} mt-6 pt-6 border-t border-slate-100 space-y-4">
-                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm outline-none">${saved.explanation || ''}</textarea>
+                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm outline-none font-medium">${saved.explanation || ''}</textarea>
                     <div class="flex items-center gap-4">
                         <span class="text-xs font-bold text-slate-500 uppercase text-[9px]">Target Date:</span>
                         <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border-none p-2 px-4 rounded-xl text-xs font-bold text-slate-600 outline-none">
                     </div>
                 </div>
             </div>`;
-
-        if (isMet) { metContainer.innerHTML += html; metCount++; } 
-        else { formContainer.innerHTML += html; }
+        if (isMet) { metContainer.innerHTML += html; metCount++; } else { formContainer.innerHTML += html; }
     });
-
     metDropdown.classList.toggle('hidden', metCount === 0);
     document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 0);
     document.getElementById('next-btn').classList.toggle('hidden', currentStep === 4);
@@ -125,13 +117,11 @@ window.handleLogin = async () => {
     try {
         const userCred = await signInWithEmailAndPassword(auth, email, pass);
         const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
-        
         if (!userSnap.exists() || !userSnap.data().isVerified) {
-            alert("Verification Pending.");
+            alert("Verification Pending. Please check back in 48hrs.");
             await signOut(auth);
             return;
         }
-
         profileData = userSnap.data();
         const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
         if (recordSnap.exists()) {
@@ -140,12 +130,20 @@ window.handleLogin = async () => {
             auditTrail = data.trail || {};
             currentStep = data.lastStep || 0;
         }
-        
         document.getElementById('auth-ui').classList.add('hidden');
         document.getElementById('audit-ui').classList.remove('hidden');
         document.getElementById('logout-btn').classList.remove('hidden');
         renderStep();
     } catch (e) { alert("Login Error: " + e.message); }
+};
+
+window.handleForgotPassword = async () => {
+    const email = document.getElementById('email').value.trim();
+    if (!email) return alert("Please enter your email address in the field above first.");
+    try {
+        await sendPasswordResetEmail(auth, email);
+        alert("A password reset link has been sent to your email.");
+    } catch (e) { alert("Error: " + e.message); }
 };
 
 window.saveField = async (id, value, type = 'status') => {
@@ -166,7 +164,13 @@ window.saveField = async (id, value, type = 'status') => {
     if (type === 'status') renderStep();
 };
 
-window.changeSection = (dir) => { currentStep += dir; renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); };
+window.changeSection = async (dir) => { 
+    currentStep += dir; 
+    await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), { lastStep: currentStep }, { merge: true });
+    renderStep(); 
+    window.scrollTo({top: 0, behavior: 'smooth'}); 
+};
+
 window.handleLogout = () => { signOut(auth); location.reload(); };
 window.toggleAuthMode = () => {
     const isLogin = document.getElementById('auth-title').innerText === "Volunteer Portal";
@@ -176,6 +180,7 @@ window.toggleAuthMode = () => {
     document.getElementById('register-btn').classList.toggle('hidden');
     document.getElementById('toggle-link').innerText = isLogin ? "Already have an account? Sign In" : "Need an account? Register here";
 };
+
 window.handleRegister = async () => {
     const email = document.getElementById('email').value.trim();
     const pass = document.getElementById('password').value;
@@ -188,6 +193,9 @@ window.handleRegister = async () => {
     try {
         const userCred = await createUserWithEmailAndPassword(auth, email, pass);
         await setDoc(doc(db, "users", userCred.user.uid), profile);
-        alert("Success! Awaiting verification."); location.reload();
+        alert("Registered! Awaiting verification.");
+        location.reload();
     } catch (e) { alert(e.message); }
 };
+
+window.finalSubmit = () => { alert("Record Finalized."); handleLogout(); };
