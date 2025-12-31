@@ -15,6 +15,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Initialize EmailJS with your Public Key
+emailjs.init("YOUR_PUBLIC_KEY");
+
 let currentStep = 0;
 let userProgress = {};
 let profileData = {};
@@ -36,7 +39,7 @@ const sections = [
         { id: "q14", text: "Is a robust InTouch process communicated for every meeting and trip?" },
         { id: "q_nightsaway", text: "For overnight events, is a Nights Away Permit holder always in charge?" },
         { id: "q_permits", text: "Are Adventurous Activity Permits checked and valid before high-risk activities?" },
-        { id: "q_gdpr", text: "Is personal data (medical forms/contact info) stored securely and disposed of correctly?" },
+        { id: "q_gdpr", text: "Is personal data stored securely and disposed of correctly?" },
         { id: "q_inclusion", text: "Are reasonable adjustments made to ensure the program is inclusive for all members?" }
     ]},
     { title: "Section Meetings", questions: [
@@ -76,7 +79,7 @@ window.handleLogin = async () => {
         const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
         
         if (!userSnap.exists() || !userSnap.data().isVerified) {
-            alert("Verification Pending. Please allow up to 48hrs.");
+            alert("Verification Pending. Please check back in 48hrs.");
             await signOut(auth);
             return;
         }
@@ -86,7 +89,7 @@ window.handleLogin = async () => {
         if (recordSnap.exists()) {
             userProgress = recordSnap.data().responses || {};
             auditTrail = recordSnap.data().trail || {};
-            // AUTO-RESUME: Jump to the last saved step
+            // AUTO-RESUME PROGRESS
             currentStep = recordSnap.data().lastStep || 0;
         }
         
@@ -120,15 +123,15 @@ window.renderStep = () => {
                 <p class="font-bold text-lg text-slate-800 mb-6 leading-tight">${q.text}</p>
                 <div class="flex gap-8">
                     ${['Yes', 'Partially', 'No'].map(v => `
-                        <label class="flex items-center gap-2 cursor-pointer font-black text-[10px] uppercase text-slate-400 hover:text-[#003945]">
+                        <label class="flex items-center gap-2 cursor-pointer font-black text-[10px] uppercase text-slate-400">
                             <input type="radio" name="${q.id}" value="${v}" ${saved.status === v ? 'checked' : ''} onchange="saveField('${q.id}', '${v}', 'status')"> ${v}
                         </label>
                     `).join('')}
                 </div>
                 <div class="${isIssue ? '' : 'hidden'} mt-6 pt-6 border-t border-slate-100 space-y-4">
-                    <textarea placeholder="Action details..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-red-100 outline-none">${saved.explanation || ''}</textarea>
+                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-red-100 outline-none">${saved.explanation || ''}</textarea>
                     <div class="flex items-center gap-4">
-                        <span class="text-xs font-bold text-slate-500 uppercase text-[9px]">Target Completion:</span>
+                        <span class="text-xs font-bold text-slate-500 uppercase">Target Date:</span>
                         <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border-none p-2 px-4 rounded-xl text-xs font-bold text-slate-600 outline-none">
                     </div>
                 </div>
@@ -151,7 +154,7 @@ window.renderStep = () => {
 window.saveField = async (id, value, type = 'status') => {
     if (!userProgress[id]) userProgress[id] = {};
     
-    // TRACKING: Log answer changes from Issue to Met
+    // LOG CHANGES FOR TRACKING
     if (type === 'status' && value === 'Yes' && userProgress[id].status && userProgress[id].status !== 'Yes') {
         if (!auditTrail[id]) auditTrail[id] = [];
         auditTrail[id].push({ from: userProgress[id].status, to: 'Yes', date: new Date().toISOString() });
@@ -166,7 +169,7 @@ window.saveField = async (id, value, type = 'status') => {
         responses: userProgress,
         trail: auditTrail,
         userDetails: profileData,
-        lastStep: currentStep, // SAVE STEP: For Pick-up-where-you-left-off
+        lastStep: currentStep, // SAVE ACTIVE STEP
         lastUpdated: new Date().toISOString()
     }, { merge: true });
     
@@ -175,7 +178,7 @@ window.saveField = async (id, value, type = 'status') => {
 
 window.changeSection = async (dir) => { 
     currentStep += dir; 
-    // Save Step on Transition
+    // Save state on move
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
         lastStep: currentStep
     }, { merge: true });
@@ -184,6 +187,50 @@ window.changeSection = async (dir) => {
 };
 
 window.handleLogout = () => { signOut(auth); location.reload(); };
-window.finalSubmit = () => { alert("Saved. Session Closed."); handleLogout(); };
+window.finalSubmit = async () => {
+    const summary = sections.map(s => {
+        return s.title + "\n" + s.questions.map(q => {
+            const r = userProgress[q.id] || {status: 'N/A'};
+            return `${q.text}: ${r.status}`;
+        }).join('\n');
+    }).join('\n\n');
 
-// Auth Toggle and Registration Logic... (Matches previous turn)
+    try {
+        await emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+            to_email: profileData.email,
+            user_name: profileData.name,
+            audit_summary: summary
+        });
+        alert("Success! Copy emailed.");
+        handleLogout();
+    } catch (e) { alert("Saved, but email failed."); handleLogout(); }
+};
+
+window.toggleAuthMode = () => {
+    const isLogin = document.getElementById('auth-title').innerText === "Volunteer Portal";
+    document.getElementById('auth-title').innerText = isLogin ? "Join Project FOCUS" : "Volunteer Portal";
+    document.getElementById('register-fields').classList.toggle('hidden');
+    document.getElementById('login-btn').classList.toggle('hidden');
+    document.getElementById('register-btn').classList.toggle('hidden');
+    document.getElementById('toggle-link').innerText = isLogin ? "Already have an account? Sign In" : "Need an account? Register here";
+};
+
+window.handleRegister = async () => {
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value;
+    const profile = {
+        email: email,
+        name: document.getElementById('reg-name').value,
+        district: document.getElementById('reg-district').value,
+        group: document.getElementById('reg-group').value,
+        section: document.getElementById('reg-section').value,
+        isVerified: false,
+        createdAt: new Date().toISOString()
+    };
+    try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+        await setDoc(doc(db, "users", userCred.user.uid), profile);
+        alert("Registered! Awaiting verification.");
+        location.reload();
+    } catch (e) { alert(e.message); }
+};
