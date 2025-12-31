@@ -114,20 +114,20 @@ window.renderStep = () => {
         const saved = userProgress[q.id] || {};
         const isIssue = saved.status === 'Partially' || saved.status === 'No';
         return `
-            <div class="bg-white p-8 card-focus ${saved.status === 'Yes' ? 'met-card' : (saved.status ? 'action-card' : '')}">
-                <p class="font-bold text-lg text-slate-800 mb-6 leading-tight">${q.text}</p>
-                <div class="flex gap-8">
+            <div class="bg-white p-6 card-focus ${saved.status === 'Yes' ? 'met-card' : (saved.status ? 'action-card' : '')} mb-6">
+                <p class="font-bold text-md text-slate-800 mb-4">${q.text}</p>
+                <div class="flex gap-6">
                     ${['Yes', 'Partially', 'No'].map(v => `
-                        <label class="flex items-center gap-2 cursor-pointer font-black text-[10px] uppercase text-slate-400">
+                        <label class="flex items-center gap-2 cursor-pointer font-black text-[9px] uppercase text-slate-400">
                             <input type="radio" name="${q.id}" value="${v}" ${saved.status === v ? 'checked' : ''} onchange="saveField('${q.id}', '${v}', 'status')"> ${v}
                         </label>
                     `).join('')}
                 </div>
-                <div class="${isIssue ? '' : 'hidden'} mt-6 pt-6 border-t border-slate-100 space-y-4">
-                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm outline-none">${saved.explanation || ''}</textarea>
+                <div class="${isIssue ? '' : 'hidden'} mt-4 pt-4 border-t border-slate-100 space-y-4">
+                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border p-3 rounded-xl text-xs outline-none">${saved.explanation || ''}</textarea>
                     <div class="flex items-center gap-4">
-                        <span class="text-xs font-bold text-slate-500 uppercase text-[9px]">Target Date:</span>
-                        <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border-none p-2 px-4 rounded-xl text-xs font-bold text-slate-600 outline-none">
+                        <span class="text-[9px] font-bold text-slate-500 uppercase">Target Date:</span>
+                        <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border p-2 rounded-lg text-xs font-bold text-slate-600 outline-none">
                     </div>
                 </div>
             </div>`;
