@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -48,12 +48,6 @@ window.handleAdminLogin = async () => {
     try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { alert("Login Error: " + e.message); }
 };
 
-window.handleAdminForgotPassword = async () => {
-    const email = document.getElementById('admin-email').value.trim();
-    if (!email) return alert("Please enter SME email address.");
-    try { await sendPasswordResetEmail(auth, email); alert("SME reset link sent."); } catch (e) { alert(e.message); }
-};
-
 async function loadAdminData() {
     const [auditSnap, userSnap] = await Promise.all([
         getDocs(collection(db, "project_focus_records")),
@@ -66,39 +60,26 @@ async function loadAdminData() {
 
 function csvSafe(v) {
     const s = (v ?? "").toString();
-    // Neutralise spreadsheet formula injection
     const neutralised = /^[=+\-@]/.test(s) ? "'" + s : s;
-    // CSV escape quotes, always wrap
     return `"${neutralised.replace(/"/g, '""')}"`;
 }
 
 window.exportToCSV = () => {
-    let csv = "data:text/csv;charset=utf-8,District,Group,Section,Auditor,Email,Question,Status,Action,Deadline
-";
+    let csv = "data:text/csv;charset=utf-8,District,Group,Section,Auditor,Email,Question,Status,Action,Deadline\r\n";
     allAuditData.forEach(audit => {
-        const p = allUserProfiles.find(u => u.uid === audit.uid) || {};
+        const p = allUserProfiles.find(u => u.uid === audit.uid) || audit.userDetails || {};
         Object.entries(audit.responses || {}).forEach(([qId, val]) => {
             csv += [
-                csvSafe(p.district),
-                csvSafe(p.group),
-                csvSafe(p.section),
-                csvSafe(p.name),
-                csvSafe(p.email),
-                csvSafe(questionMap[qId] || qId),
-                csvSafe(val?.status),
-                csvSafe(val?.explanation),
-                csvSafe(val?.deadline)
-            ].join(",") + "
-";
+                csvSafe(p.district), csvSafe(p.group), csvSafe(p.section),
+                csvSafe(p.name), csvSafe(p.email), csvSafe(questionMap[qId] || qId),
+                csvSafe(val?.status), csvSafe(val?.explanation), csvSafe(val?.deadline)
+            ].join(",") + "\r\n";
         });
     });
-
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csv));
-    link.setAttribute("download", "Project_Focus_Export.csv");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    link.setAttribute("download", `Project_Focus_Export_${new Date().toLocaleDateString()}.csv`);
+    document.body.appendChild(link); link.click(); link.remove();
 };
 
 window.showDistrictDetails = (district) => {
@@ -127,7 +108,7 @@ window.showDistrictDetails = (district) => {
                 <td class="p-10 align-top border-r w-1/3">
                     <div class="font-black text-[#003945] text-2xl uppercase italic leading-none mb-2">${profile.group || 'N/A'}</div>
                     <div class="text-[11px] font-black text-[#7413dc] bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-8 border border-purple-100">${profile.section || 'N/A'}</div>
-                    <div class="pt-6 border-t border-slate-100 space-y-3">
+                    <div class="pt-6 border-t border-slate-100">
                         <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block underline decoration-teal-500">${profile.email || a.email || 'Email Missing'}</span>
                         <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${profile.name || 'Anonymous'}</div>
                     </div>
@@ -158,15 +139,18 @@ window.renderGrid = () => {
 window.renderUserList = () => {
     const tbody = document.getElementById('user-table-body');
     const pending = allUserProfiles.filter(u => !u.isVerified);
-    tbody.innerHTML = pending.map(u => `
+    tbody.innerHTML = pending.length ? pending.map(u => `
         <tr class="hover:bg-slate-50">
             <td class="p-6 font-bold text-[#003945] underline decoration-yellow-400">${u.email || "Missing Email"}</td>
             <td class="p-6 text-sm font-black text-slate-700 uppercase">${u.group} - ${u.section}</td>
             <td class="p-6 text-right"><button onclick="verifyUser('${u.uid}')" class="scout-gradient text-white text-[10px] font-black uppercase px-6 py-2 rounded-full shadow-lg">Approve</button></td>
-        </tr>`).join('');
+        </tr>`).join('') : `<tr><td colspan="3" class="p-20 text-center text-slate-300 italic font-bold">No pending verification requests.</td></tr>`;
 };
 
 window.verifyUser = async (uid) => { await updateDoc(doc(db, "users", uid), { isVerified: true }); alert("Approved!"); await loadAdminData(); };
-window.switchTab = (tab) => { document.getElementById('tab-audits').classList.toggle('hidden', tab !== 'audits'); document.getElementById('tab-users').classList.toggle('hidden', tab !== 'users'); };
+window.switchTab = (tab) => { 
+    document.getElementById('tab-audits').classList.toggle('hidden', tab !== 'audits'); 
+    document.getElementById('tab-users').classList.toggle('hidden', tab !== 'users'); 
+};
 window.closeDetails = () => document.getElementById('response-view').classList.add('hidden');
 window.handleAdminLogout = () => { signOut(auth); location.reload(); };
