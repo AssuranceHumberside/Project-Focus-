@@ -19,54 +19,51 @@ let currentStep = 0;
 let userProgress = {};
 
 const sections = [
-    { title: "Section 1: Identification", questions: [
+    { title: "Identification", questions: [
         { id: "name", type: "text", text: "What is your full name?" },
         { id: "email_contact", type: "text", text: "What is your contact email address?" },
         { id: "district", type: "select", text: "Which District is your section part of?", options: ["Beverley and Hornsea", "Blacktoft Beacon", "City of Hull", "County Section", "Grimsby and Cleethorpes", "North Lincolnshire", "Pocklington", "South Holderness", "Wolds and Coast"] },
         { id: "group", type: "text", text: "Which Scout Group do you belong to?" },
-        { id: "section_type", type: "text", text: "Which specific section are you auditing?" }
+        { id: "section_type", type: "text", text: "Which specific section (e.g., Beavers, Cubs) are you auditing?" }
     ]},
-    { title: "Section 2: Preparation and Planning", questions: [
-        { id: "q10", text: "Are all leaders and adult helpers up to date with DBS, AAC, and Welcome Conversations?" },
-        { id: "q_risk", text: "Is a written risk assessment produced for every activity and shared with all adults?" },
-        { id: "q_training", text: "Has the section leadership team completed all mandatory safety and safeguarding training?" },
-        { id: "q_approval", text: "Are all activities held away from your regular meeting place approved by the Lead Volunteer?" },
+    { title: "Preparation and Planning", questions: [
+        { id: "q_dbs", text: "Can you confirm every leader and adult helper regularly attending has completed DBS, AAC, and Welcome Conversations?" },
+        { id: "q_risk", text: "Is a written risk assessment produced for every activity, and is it shared with all adults involved?" },
+        { id: "q_training", text: "Has every member of the section leadership team completed their mandatory safety and safeguarding training?" },
+        { id: "q_approval", text: "For all activities held away from your regular meeting place, do you ensure they are approved by the relevant Lead Volunteer?" },
         { id: "q14", text: "Is a robust InTouch process active and communicated for every meeting and trip?" },
-        { id: "q_yellow", text: "Does every adult have access to the Yellow Card and understand how to report concerns?" }
+        { id: "q_yellow", text: "Does every adult volunteer have access to the Yellow Card and understand their safeguarding responsibilities?" }
     ]},
-    { title: "Section 3: Meetings & Activities", questions: [
-        { id: "q12", text: "Is there a suitable supervision plan in place for all meetings, including 'free time'?" },
-        { id: "q37", text: "Does the Leader in Charge perform regular headcounts to account for everyone?" },
-        { id: "q16", text: "Are up-to-date medical and health details for everyone immediately accessible?" },
-        { id: "q33", text: "Is there a clear plan for emergencies, known to all adults in the team?" },
-        { id: "q31", text: "Is a fully-stocked first-aid kit available and accessible at all times?" },
-        { id: "q42", text: "Does every adult understand how and when to record and report incidents?" }
+    { title: "Section Meetings & Activities", questions: [
+        { id: "q12", text: "Do you have a clear supervision plan that covers structured activities, 'free time,' and adult-to-young person ratios?" },
+        { id: "q37", text: "Does the Leader in Charge perform regular headcounts or maintain an accurate register to account for everyone?" },
+        { id: "q16", text: "Are up-to-date medical and health details for all (including adults) immediately accessible during all activities?" },
+        { id: "q33", text: "Do you have a clear plan for how to handle an emergency, and do all adults know their specific role within it?" },
+        { id: "q31", text: "Is a fully-stocked first-aid kit available and easily accessible to all leaders at all times?" },
+        { id: "q42", text: "Does every adult understand how and when to record and report accidents, near-misses, or 'minor' injuries?" }
     ]},
-    { title: "Section 4: The Physical Environment", questions: [
-        { id: "q20", text: "Have all practical steps been taken to identify and reduce tripping or slipping hazards?" },
-        { id: "q18", text: "Are all chairs, tables, and equipment stored safely when not in use?" },
-        { id: "q25", text: "Has the potential for falls onto sharp objects or glass been minimised?" },
-        { id: "q22", text: "Do you regularly check for overhead hazards and unguarded lights?" },
-        { id: "q23", text: "Are clear boundaries and activity limits briefed to young people at the start?" },
-        { id: "q30", text: "Is all equipment used by the section regularly checked for safety?" }
+    { title: "The Physical Environment", questions: [
+        { id: "q20", text: "Have all practical steps been taken to identify and reduce tripping or slipping hazards in your meeting place?" },
+        { id: "q18", text: "Are all chairs, tables, and equipment stored safely and securely when not in use to prevent injury?" },
+        { id: "q25", text: "Has the potential for falls onto sharp objects, solid surfaces, or glass been minimised as far as is practically possible?" },
+        { id: "q22", text: "Do you regularly check for overhead hazards and ensure that all lights are appropriately guarded?" },
+        { id: "q23", text: "Are clear boundaries and activity limits briefed to and understood by all young people at the start of every meeting?" },
+        { id: "q30", text: "Is all equipment used by the section regularly inspected to ensure it is safe and in good working order?" }
     ]},
-    { title: "Section 5: Program & Culture", questions: [
-        { id: "q27", text: "Are all games and activities suitable for the age and ability of participants?" },
-        { id: "q28", text: "Are the rules of every game briefed and understood before play begins?" },
-        { id: "q_dynamic", text: "Do you actively 'check and challenge' safety throughout a meeting?" },
-        { id: "q36", text: "Is a specific 'Leader in Charge' clearly identified and known for every session?" },
-        { id: "q39", text: "Does the Leader in Charge assign specific roles to other adults?" },
-        { id: "q43", text: "Is safety discussed at planning meetings and post-activity reviews?" },
-        { id: "q49", text: "Is all safety-specific equipment in the meeting place inspected regularly?" }
+    { title: "Program & Culture", questions: [
+        { id: "q27", text: "Are all games and activities chosen specifically to be suitable for the age and ability of participants?" },
+        { id: "q28", text: "Are the rules of every game clearly briefed and understood by both participants and leaders before play begins?" },
+        { id: "q_dynamic", text: "Do you actively 'check and challenge' safety throughout a meeting, stopping activities if risks change?" },
+        { id: "q36", text: "Is a specific 'Leader in Charge' clearly identified and known to all adults and young people for every session?" },
+        { id: "q39", text: "Does the Leader in Charge assign specific responsibilities to other adults to ensure adequate oversight?" },
+        { id: "q43", text: "Is safety a standard talking point at the start of all events, during camp planning, and in post-activity reviews?" },
+        { id: "q49", text: "Is all safety-specific equipment in the meeting place inspected on a regular, scheduled basis?" }
     ]}
 ];
 
-// ATTACH TO WINDOW SO BUTTONS WORK
 window.handleLogin = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
-    if(!email || !pass) return alert("Please enter email and password");
-    
     try {
         const userCred = await signInWithEmailAndPassword(auth, email, pass);
         const docSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
@@ -74,25 +71,21 @@ window.handleLogin = async () => {
         
         document.getElementById('auth-ui').classList.add('hidden');
         document.getElementById('audit-ui').classList.remove('hidden');
+        document.getElementById('progress-container').classList.remove('hidden');
         renderStep();
-    } catch (e) { 
-        alert("Login Error: " + e.message); 
-    }
+    } catch (e) { alert("Login Error: " + e.message); }
 };
 
 window.renderStep = () => {
     const section = sections[currentStep];
     const container = document.getElementById('form-container');
     document.getElementById('section-title').innerText = section.title;
-    document.getElementById('form-container').classList.remove('hidden');
-    document.getElementById('summary-view').classList.add('hidden');
+    document.getElementById('current-step-label').innerText = currentStep + 1;
 
+    // Update Progress Pills
     for(let i=1; i<=5; i++) {
-        const bar = document.getElementById(`prog-${i}`);
-        if(bar) {
-            bar.classList.toggle('scouts-teal', i <= currentStep + 1);
-            bar.classList.toggle('bg-slate-200', i > currentStep + 1);
-        }
+        const pill = document.getElementById(`prog-${i}`);
+        pill.classList.toggle('progress-active', i <= currentStep + 1);
     }
 
     container.innerHTML = section.questions.map(q => {
@@ -103,40 +96,8 @@ window.renderStep = () => {
     }).join('');
 
     document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 0);
-};
-
-window.showSummary = () => {
-    const currentQuestions = sections[currentStep].questions;
-    const allAnswered = currentQuestions.every(q => userProgress[q.id] && userProgress[q.id].status);
-    
-    if (!allAnswered) return alert("Please complete all questions in this section before reviewing.");
-
-    document.getElementById('form-container').classList.add('hidden');
-    document.getElementById('summary-view').classList.remove('hidden');
-    const content = document.getElementById('summary-content');
-    
-    content.innerHTML = currentQuestions.map(q => `
-        <div class="flex justify-between border-b py-2 text-sm">
-            <span class="text-slate-600">${q.text}</span>
-            <span class="font-bold text-[#003945]">${userProgress[q.id].status}</span>
-        </div>
-    `).join('');
-};
-
-window.confirmSection = () => {
-    currentStep++;
-    if (currentStep < sections.length) {
-        renderStep();
-    } else {
-        document.getElementById('next-btn').classList.add('hidden');
-        document.getElementById('submit-btn').classList.remove('hidden');
-    }
-};
-
-window.changeSection = (dir) => {
-    currentStep += dir;
-    renderStep();
-    window.scrollTo(0,0);
+    document.getElementById('next-btn').classList.toggle('hidden', currentStep === 4);
+    document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 4);
 };
 
 window.saveField = async (id, value, type = 'status') => {
@@ -152,32 +113,72 @@ window.saveField = async (id, value, type = 'status') => {
 };
 
 function renderAuditQuestion(q, saved) {
+    const cardStatus = saved.status === 'Yes' ? 'met-card' : (saved.status ? 'action-card' : '');
     return `
-        <div class="bg-white p-6 rounded shadow ${saved.status ? (saved.status === 'Yes' ? 'met-card' : 'action-card') : 'border'}">
-            <p class="font-bold text-slate-800 mb-4">${q.text}</p>
-            <div class="flex gap-6 mb-4">
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 card-focus ${cardStatus}">
+            <p class="font-bold text-lg text-slate-800 mb-6 leading-snug">${q.text}</p>
+            <div class="flex flex-wrap gap-8">
                 ${['Yes', 'Partially', 'No'].map(v => `
-                    <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <label class="flex items-center gap-3 cursor-pointer group">
                         <input type="radio" name="${q.id}" value="${v}" ${saved.status === v ? 'checked' : ''} 
-                        onchange="saveField('${q.id}', '${v}'); renderStep();"> ${v}
+                        onchange="saveField('${q.id}', '${v}'); renderStep();">
+                        <span class="text-sm font-bold uppercase tracking-widest text-slate-500 group-hover:text-teal-900 transition-colors">${v}</span>
                     </label>
                 `).join('')}
             </div>
-            <div class="${(saved.status === 'Partially' || saved.status === 'No') ? '' : 'hidden'} space-y-3 pt-4 border-t border-red-100">
-                <textarea placeholder="Observation..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full border p-3 rounded text-sm bg-red-50/30">${saved.explanation || ''}</textarea>
-                <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="border p-3 rounded text-sm w-full md:w-auto">
+            <div class="${(saved.status === 'Partially' || saved.status === 'No') ? '' : 'hidden'} mt-6 pt-6 border-t border-slate-100 space-y-4">
+                <p class="text-[10px] font-black uppercase text-red-600 tracking-widest">Action Plan Required</p>
+                <textarea placeholder="Please detail the current situation and required actions..." 
+                    onchange="saveField('${q.id}', this.value, 'explanation')" 
+                    class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-red-200 outline-none transition-all">${saved.explanation || ''}</textarea>
+                <div class="flex items-center gap-4">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Target Date:</span>
+                    <input type="date" value="${saved.deadline || ''}" 
+                        onchange="saveField('${q.id}', this.value, 'deadline')" 
+                        class="bg-slate-50 border-none p-2 px-4 rounded-xl text-sm focus:ring-2 focus:ring-red-200 outline-none">
+                </div>
             </div>
         </div>
     `;
 }
 
 function renderTextField(q, saved) {
-    return `<div class="bg-white p-6 rounded border"><label class="block font-bold mb-2">${q.text}</label><input type="text" value="${saved.status || ''}" onchange="saveField('${q.id}', this.value)" class="w-full border p-3 rounded shadow-sm"></div>`;
+    return `
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 card-focus met-card">
+            <label class="block font-bold text-slate-800 mb-4">${q.text}</label>
+            <input type="text" value="${saved.status || ''}" 
+                onchange="saveField('${q.id}', this.value)" 
+                class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-teal-700 outline-none transition-all">
+        </div>
+    `;
 }
 
 function renderSelectField(q, saved) {
-    return `<div class="bg-white p-6 rounded border"><label class="block font-bold mb-2">${q.text}</label><select onchange="saveField('${q.id}', this.value)" class="w-full border p-3 rounded shadow-sm"><option value="">Select...</option>${q.options.map(o => `<option value="${o}" ${saved.status === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
+    return `
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 card-focus met-card">
+            <label class="block font-bold text-slate-800 mb-4">${q.text}</label>
+            <select onchange="saveField('${q.id}', this.value)" 
+                class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-teal-700 outline-none transition-all">
+                <option value="">Select an option...</option>
+                ${q.options.map(o => `<option value="${o}" ${saved.status === o ? 'selected' : ''}>${o}</option>`).join('')}
+            </select>
+        </div>
+    `;
 }
 
+window.changeSection = (dir) => {
+    const sectionQuestions = sections[currentStep].questions;
+    const allAnswered = sectionQuestions.every(q => userProgress[q.id] && userProgress[q.id].status);
+    
+    if (dir === 1 && !allAnswered) return alert("Please complete all sections on this page to move forward.");
+    
+    currentStep += dir;
+    renderStep();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 window.handleLogout = async () => { await signOut(auth); location.reload(); };
-window.finalSubmit = () => { alert("Project FOCUS record finalized. Thank you for your commitment to safety."); handleLogout(); };
+window.finalSubmit = () => { 
+    alert("Project FOCUS record finalized. Thank you for ensuring Humberside Scouts remains a safe environment."); 
+    handleLogout(); 
+};
