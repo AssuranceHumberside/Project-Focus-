@@ -22,7 +22,6 @@
     </style>
 </head>
 <body class="text-slate-800">
-
     <header class="scout-gradient text-white sticky top-0 z-50 shadow-xl">
         <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center text-white">
             <div class="flex items-center gap-5">
@@ -37,11 +36,9 @@
         <div id="auth-ui">
             <h2 id="auth-title" class="text-4xl font-black text-[#003945] mb-2 leading-tight">Volunteer Portal</h2>
             <p id="auth-desc" class="text-slate-500 mb-8 font-medium">Please authenticate to continue.</p>
-            
             <div id="auth-card" class="bg-white p-8 rounded-[2rem] shadow-2xl border border-slate-100 space-y-4">
                 <input type="email" id="email" placeholder="Email Address" class="w-full px-6 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-teal-700">
                 <input type="password" id="password" placeholder="Password" class="w-full px-6 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-teal-700">
-                
                 <div id="register-fields" class="hidden space-y-4 pt-6 mt-2 border-t border-slate-100">
                     <input type="text" id="reg-name" placeholder="Full Name" class="w-full px-6 py-4 bg-slate-50 rounded-2xl border outline-none">
                     <select id="reg-district" class="w-full px-6 py-4 bg-slate-50 rounded-2xl border outline-none font-bold text-slate-500">
@@ -53,10 +50,8 @@
                     <input type="text" id="reg-group" placeholder="Scout Group" class="w-full px-6 py-4 bg-slate-50 rounded-2xl border outline-none">
                     <input type="text" id="reg-section" placeholder="Section (e.g. Beavers)" class="w-full px-6 py-4 bg-slate-50 rounded-2xl border outline-none">
                 </div>
-
                 <button id="login-btn" onclick="handleLogin()" class="w-full scout-gradient text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg">Sign In</button>
                 <button id="register-btn" onclick="handleRegister()" class="hidden w-full bg-[#7413dc] text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg">Create Account</button>
-                
                 <div class="mt-8 pt-6 border-t border-slate-100 text-center">
                     <button onclick="toggleAuthMode()" id="toggle-link" class="text-xs font-black uppercase tracking-widest text-[#003945] hover:underline">Need an account? Register here</button>
                 </div>
@@ -71,19 +66,15 @@
                 <div id="prog-4" class="progress-pill flex-1"></div>
                 <div id="prog-5" class="progress-pill flex-1"></div>
             </div>
-            
             <h2 id="section-title" class="text-3xl font-black text-[#003945] uppercase italic mb-8"></h2>
-
             <details id="met-dropdown" class="mb-6 group">
-                <summary class="cursor-pointer bg-slate-100 p-4 rounded-2xl font-black uppercase text-[10px] tracking-widest text-slate-500 flex justify-between items-center group-open:bg-teal-50 group-open:text-teal-700">
+                <summary class="cursor-pointer bg-slate-100 p-4 rounded-2xl font-black uppercase text-[10px] tracking-widest text-slate-500 flex justify-between items-center group-open:bg-teal-50">
                     <span>View Met Standards (Review)</span>
                     <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </summary>
                 <div id="met-container" class="mt-4 space-y-4"></div>
             </details>
-
             <div id="form-container" class="space-y-6"></div>
-            
             <div class="flex justify-between items-center pt-10 border-t border-slate-100 mt-10">
                 <button id="prev-btn" onclick="changeSection(-1)" class="hidden text-slate-400 font-black uppercase text-xs">Previous</button>
                 <button id="next-btn" onclick="changeSection(1)" class="ml-auto scout-gradient text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest shadow-md">Next Section</button>
