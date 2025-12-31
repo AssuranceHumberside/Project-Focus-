@@ -7,17 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --scout-teal: #003945; 
-            --scout-purple: #7413dc; 
-            --scout-yellow: #ffe627;
-        }
-        body { font-family: 'Nunito Sans', sans-serif; background-color: #f8fafc; }
+        :root { --scout-teal: #003945; --scout-purple: #7413dc; --scout-yellow: #ffe627; }
+        body { font-family: 'Nunito Sans', sans-serif; background: #f8fafc; }
         .scout-gradient { background: linear-gradient(135deg, var(--scout-teal) 0%, #001a20 100%); }
         .hidden { display: none !important; }
         .card-focus { border-left: 6px solid #cbd5e1; transition: all 0.2s; background: white; border-radius: 1.5rem; }
         .met-card { border-left-color: var(--scout-teal); }
-        .action-card { border-left-color: #ed3f23; } /* Scout Red */
+        .action-card { border-left-color: #ed3f23; }
         .progress-pill { height: 6px; border-radius: 99px; background: #e2e8f0; transition: all 0.4s ease; }
         .progress-active { background: var(--scout-teal); box-shadow: 0 0 10px rgba(0, 57, 69, 0.3); }
     </style>
@@ -27,7 +23,7 @@
     <header class="scout-gradient text-white sticky top-0 z-50 shadow-xl">
         <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center text-white">
             <div class="flex items-center gap-5">
-                <img src="Humberside Logo.png" alt="Humberside Scouts" class="h-10 w-auto bg-white p-1 rounded shadow-sm">
+                <img src="Humberside Logo.png" alt="Humberside Scouts" class="h-10 w-auto bg-white p-1 rounded shadow-sm text-white">
                 <h1 class="text-xl font-black uppercase italic tracking-tight text-white">Project FOCUS</h1>
             </div>
             <button id="logout-btn" onclick="handleLogout()" class="hidden text-[10px] font-black border border-white/30 px-5 py-2 rounded-full uppercase tracking-widest text-white hover:bg-white hover:text-teal-900 transition-all">Logout</button>
@@ -39,7 +35,7 @@
             <h2 id="auth-title" class="text-4xl font-black text-[#003945] mb-2 leading-tight">Welcome Back.</h2>
             <p id="auth-desc" class="text-slate-500 mb-8 font-medium">Please authenticate to access the dashboard.</p>
             
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100 space-y-4">
+            <div id="auth-card" class="bg-white p-8 rounded-[2rem] shadow-2xl border border-slate-100 space-y-4">
                 <input type="email" id="email" placeholder="Email Address" class="w-full px-6 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-teal-700">
                 <input type="password" id="password" placeholder="Password" class="w-full px-6 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-teal-700">
                 
@@ -59,7 +55,7 @@
                 <button id="register-btn" onclick="handleRegister()" class="hidden w-full bg-[#7413dc] text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:opacity-90 transition-all text-white shadow-lg">Create Account</button>
                 
                 <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-                    <p class="text-xs text-slate-400 mb-4 font-bold">Questions? Contact <a href="mailto:assurance@humbersidescouts.org.uk" class="text-[#003945] underline decoration-yellow-400">assurance@humbersidescouts.org.uk</a></p>
+                    <p class="text-xs text-slate-400 mb-4 font-bold">Questions? Contact <a href="mailto:assurance@humbersidescouts.org.uk" class="text-[#003945] underline decoration-yellow-400 font-bold">assurance@humbersidescouts.org.uk</a></p>
                     <button onclick="toggleAuthMode()" id="toggle-link" class="text-xs font-black uppercase tracking-widest text-[#003945] hover:underline">Need an account? Register here</button>
                 </div>
             </div>
@@ -74,7 +70,7 @@
             </div>
             <h2 id="section-title" class="text-3xl font-black text-[#003945] uppercase italic mb-8"></h2>
             <div id="form-container" class="space-y-6"></div>
-            <div class="flex justify-between items-center pt-10">
+            <div class="flex justify-between items-center pt-10 border-t border-slate-100 mt-10">
                 <button id="prev-btn" onclick="changeSection(-1)" class="hidden text-slate-400 font-black uppercase text-xs">Previous</button>
                 <button id="next-btn" onclick="changeSection(1)" class="ml-auto scout-gradient text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-white shadow-md">Next Section</button>
                 <button id="submit-btn" onclick="finalSubmit()" class="hidden ml-auto bg-[#7413dc] text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-white shadow-xl">Finish Audit</button>
