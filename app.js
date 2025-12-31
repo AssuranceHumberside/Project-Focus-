@@ -18,8 +18,8 @@ const db = getFirestore(app);
 let currentStep = 0;
 let userProgress = {};
 let profileData = {};
+let auditTrail = {};
 
-// Sections array with 35 questions...
 const sections = [
     { title: "People & Training", questions: [
         { id: "q_dbs", text: "Are all DBS, AAC, and Welcome Conversations complete for the team?" },
@@ -76,24 +76,34 @@ window.handleLogin = async () => {
         const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
         
         if (!userSnap.exists() || !userSnap.data().isVerified) {
-            alert("Verification Pending."); await signOut(auth); return;
+            alert("Verification Pending. Please check back soon.");
+            await signOut(auth);
+            return;
         }
 
         profileData = userSnap.data();
         const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
         if (recordSnap.exists()) {
             userProgress = recordSnap.data().responses || {};
+            auditTrail = recordSnap.data().trail || {};
             currentStep = recordSnap.data().lastStep || 0;
         }
         
-        // SUCCESS UI SWITCH
         document.getElementById('banner-section').classList.add('hidden');
         document.getElementById('landing-page-content').classList.add('hidden');
         document.getElementById('footer-alert').classList.add('hidden');
-        
         document.getElementById('logout-btn').classList.remove('hidden');
         document.getElementById('landing-dashboard').classList.remove('hidden');
     } catch (e) { alert("Login Error: " + e.message); }
+};
+
+window.handleForgotPassword = async () => {
+    const email = document.getElementById('email').value.trim();
+    if (!email) return alert("Enter email address first.");
+    try {
+        await sendPasswordResetEmail(auth, email);
+        alert("A password reset link has been sent to your email.");
+    } catch (e) { alert("Error: " + e.message); }
 };
 
 window.startAudit = () => {
@@ -138,9 +148,13 @@ window.renderStep = () => {
 
 window.saveField = async (id, value, type = 'status') => {
     if (!userProgress[id]) userProgress[id] = {};
+    if (type === 'status' && value === 'Yes' && userProgress[id].status && userProgress[id].status !== 'Yes') {
+        if (!auditTrail[id]) auditTrail[id] = [];
+        auditTrail[id].push({ from: userProgress[id].status, to: 'Yes', date: new Date().toISOString() });
+    }
     userProgress[id][type] = value;
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
-        responses: userProgress, lastStep: currentStep, lastUpdated: new Date().toISOString()
+        responses: userProgress, trail: auditTrail, lastStep: currentStep, lastUpdated: new Date().toISOString()
     }, { merge: true });
     if (type === 'status') renderStep();
 };
@@ -156,10 +170,9 @@ window.finalSubmit = () => {
     document.getElementById('thank-you-ui').classList.remove('hidden');
 };
 
-window.handleForgotPassword = async () => {
-    const email = document.getElementById('email').value.trim();
-    if (!email) return alert("Enter email.");
-    try { await sendPasswordResetEmail(auth, email); alert("Reset link sent."); } catch (e) { alert(e.message); }
+window.backToDashboard = () => {
+    document.getElementById('thank-you-ui').classList.add('hidden');
+    document.getElementById('landing-dashboard').classList.remove('hidden');
 };
 
 window.toggleAuthMode = () => {
