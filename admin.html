@@ -11,46 +11,44 @@
 </head>
 <body class="bg-slate-100 min-h-screen font-sans">
     
-    <div id="admin-auth-ui" class="max-w-md mx-auto mt-32 px-4">
-        <div class="scouts-teal text-white p-6 rounded-t-xl shadow-lg text-center">
-            <h1 class="text-2xl font-bold italic text-white">Project FOCUS</h1>
-            <p class="text-xs uppercase tracking-widest mt-1 text-white">SME Administrative Login</p>
+    <header class="scouts-teal text-white p-4 shadow-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center text-white">
+            <div class="flex items-center gap-4">
+                <img src="Humberside Logo.png" alt="Humberside Scouts Logo" class="h-12 w-auto bg-white p-1 rounded">
+                <div class="border-l pl-4 border-white/30">
+                    <h1 class="text-xl font-bold italic leading-none text-white">Project FOCUS</h1>
+                    <p class="text-[10px] uppercase tracking-widest mt-1 opacity-80 text-white">SME Administrative Login</p>
+                </div>
+            </div>
         </div>
-        <div class="bg-white p-8 rounded-b-xl shadow-xl border-b-8 border-yellow-400">
+    </header>
+
+    <div id="admin-auth-ui" class="max-w-md mx-auto mt-20 px-4">
+        <div class="bg-white p-8 rounded-xl shadow-xl border-b-8 border-yellow-400">
+            <h2 class="text-xl font-bold text-center mb-6">Enter Admin Credentials</h2>
             <input type="email" id="admin-email" placeholder="Email Address" class="w-full border p-3 mb-3 rounded outline-none focus:ring-2 focus:ring-[#003945]">
             <input type="password" id="admin-password" placeholder="Password" class="w-full border p-3 mb-6 rounded outline-none focus:ring-2 focus:ring-[#003945]">
             <button onclick="handleAdminLogin()" class="w-full bg-[#633185] text-white py-3 rounded font-bold hover:opacity-90 transition-all">Sign In</button>
         </div>
     </div>
 
-    <div id="dashboard-ui" class="hidden">
-        <header class="scouts-teal text-white p-6 shadow-lg">
-            <div class="max-w-6xl mx-auto flex justify-between items-center">
-                <h1 class="text-2xl font-bold italic text-white">Project FOCUS: District Assurance</h1>
-                <button onclick="location.reload()" class="text-xs bg-white/20 px-3 py-1 rounded text-white">Logout</button>
+    <div id="dashboard-ui" class="hidden max-w-7xl mx-auto p-6">
+        <div id="district-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"></div>
+        <div id="response-view" class="hidden bg-white shadow-xl rounded-xl overflow-hidden border">
+            <div class="p-6 scouts-teal text-white flex justify-between items-center text-white">
+                <h2 id="selected-district-name" class="text-xl font-bold text-white"></h2>
+                <button onclick="closeDetails()" class="bg-white/20 px-4 py-1 rounded text-sm text-white font-bold">Back</button>
             </div>
-        </header>
-
-        <main class="max-w-7xl mx-auto p-6">
-            <div id="district-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"></div>
-            <div id="response-view" class="hidden bg-white shadow-xl rounded-xl overflow-hidden border border-slate-200">
-                <div class="p-6 scouts-teal text-white flex justify-between items-center">
-                    <h2 id="selected-district-name" class="text-xl font-bold text-white text-white"></h2>
-                    <button onclick="closeDetails()" class="bg-white/20 hover:bg-white/30 px-4 py-1 rounded text-sm font-bold text-white">Back to Districts</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 border-b">
-                            <tr>
-                                <th class="p-4 font-bold text-xs uppercase text-slate-700">Auditor & Unit Details</th>
-                                <th class="p-4 font-bold text-xs uppercase text-slate-700">Compliance Gaps</th>
-                            </tr>
-                        </thead>
-                        <tbody id="response-table-body" class="divide-y"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 border-b">
+                    <tr>
+                        <th class="p-4 font-bold text-xs uppercase">Auditor & Unit</th>
+                        <th class="p-4 font-bold text-xs uppercase">Compliance Gaps</th>
+                    </tr>
+                </thead>
+                <tbody id="response-table-body" class="divide-y"></tbody>
+            </table>
+        </div>
     </div>
 
     <script type="module" src="admin.js"></script>
