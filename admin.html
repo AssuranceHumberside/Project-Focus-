@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Project FOCUS - Admin Dashboard</title>
+    <title>Project FOCUS - SME District View</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .scouts-teal { background-color: #003945; }
@@ -17,21 +17,20 @@
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-6">
-        <div id="district-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    <main class="max-w-7xl mx-auto p-6">
+        <div id="district-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"></div>
 
-        <div id="response-view" class="hidden mt-10 bg-white shadow-xl rounded-xl overflow-hidden border border-slate-200">
+        <div id="response-view" class="hidden bg-white shadow-xl rounded-xl overflow-hidden border border-slate-200">
             <div class="p-6 scouts-teal text-white flex justify-between items-center">
                 <h2 id="selected-district-name" class="text-xl font-bold text-white"></h2>
-                <button onclick="closeDetails()" class="bg-white/20 hover:bg-white/30 px-4 py-1 rounded text-sm text-white">Close</button>
+                <button onclick="closeDetails()" class="bg-white/20 hover:bg-white/30 px-4 py-1 rounded text-sm text-white font-bold">Close View</button>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 border-b">
                         <tr>
-                            <th class="p-4 font-bold text-xs uppercase text-slate-700">Group / Section</th>
-                            <th class="p-4 font-bold text-xs uppercase text-slate-700">Overall Status</th>
-                            <th class="p-4 font-bold text-xs uppercase text-slate-700">Detailed Issues & Comments</th>
+                            <th class="p-4 font-bold text-xs uppercase text-slate-700">Auditor & Unit</th>
+                            <th class="p-4 font-bold text-xs uppercase text-slate-700 w-2/3">Actions Required (Not Met / Partially Met)</th>
                         </tr>
                     </thead>
                     <tbody id="response-table-body" class="divide-y"></tbody>
