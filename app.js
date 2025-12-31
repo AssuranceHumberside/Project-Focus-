@@ -17,6 +17,7 @@ const db = getFirestore(app);
 
 let currentStep = 0;
 let userProgress = {};
+let changeHistory = {}; // New: Tracks timestamps of status changes
 
 const sections = [
     { title: "Identification", questions: [
@@ -67,7 +68,15 @@ window.handleLogin = async () => {
     try {
         const userCred = await signInWithEmailAndPassword(auth, email, pass);
         const docSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
-        userProgress = docSnap.exists() ? docSnap.data().responses : {};
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            userProgress = data.responses || {};
+            changeHistory = data.history || {};
+            
+            // returning user logic: start at first section with unresolved issues
+            currentStep = findFirstUnresolvedSection();
+        }
         
         document.getElementById('auth-ui').classList.add('hidden');
         document.getElementById('audit-ui').classList.remove('hidden');
@@ -76,25 +85,57 @@ window.handleLogin = async () => {
     } catch (e) { alert("Login Error: " + e.message); }
 };
 
+function findFirstUnresolvedSection() {
+    for (let i = 0; i < sections.length; i++) {
+        const hasIssue = sections[i].questions.some(q => 
+            userProgress[q.id] && (userProgress[q.id].status === 'No' || userProgress[q.id].status === 'Partially')
+        );
+        if (hasIssue) return i;
+    }
+    return 0;
+}
+
 window.renderStep = () => {
     const section = sections[currentStep];
     const container = document.getElementById('form-container');
     document.getElementById('section-title').innerText = section.title;
     document.getElementById('current-step-label').innerText = currentStep + 1;
 
-    // Update Progress Pills
     for(let i=1; i<=5; i++) {
         const pill = document.getElementById(`prog-${i}`);
         pill.classList.toggle('progress-active', i <= currentStep + 1);
     }
 
-    container.innerHTML = section.questions.map(q => {
-        const saved = userProgress[q.id] || {};
-        if (q.type === 'text') return renderTextField(q, saved);
-        if (q.type === 'select') return renderSelectField(q, saved);
-        return renderAuditQuestion(q, saved);
-    }).join('');
+    // Split questions into Priority (Gaps) and Completed (Met)
+    const priorityQs = section.questions.filter(q => 
+        userProgress[q.id] && (userProgress[q.id].status === 'No' || userProgress[q.id].status === 'Partially')
+    );
+    const resolvedQs = section.questions.filter(q => 
+        !userProgress[q.id] || userProgress[q.id].status === 'Yes' || q.type === 'text' || q.type === 'select'
+    );
 
+    let htmlContent = priorityQs.map(q => renderAuditQuestion(q, userProgress[q.id], true)).join('');
+    
+    if (resolvedQs.length > 0) {
+        htmlContent += `
+            <details class="group mt-10">
+                <summary class="list-none cursor-pointer bg-slate-100 p-4 rounded-2xl font-bold text-slate-500 uppercase tracking-widest text-xs flex justify-between items-center group-open:bg-teal-50 group-open:text-teal-900 transition-all">
+                    <span>Resolved or Basic Details (${resolvedQs.length})</span>
+                    <span class="transition-transform group-open:rotate-180">▼</span>
+                </summary>
+                <div class="mt-4 grid gap-6">
+                    ${resolvedQs.map(q => {
+                        const saved = userProgress[q.id] || {};
+                        if (q.type === 'text') return renderTextField(q, saved);
+                        if (q.type === 'select') return renderSelectField(q, saved);
+                        return renderAuditQuestion(q, saved, false);
+                    }).join('')}
+                </div>
+            </details>
+        `;
+    }
+
+    container.innerHTML = htmlContent;
     document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 0);
     document.getElementById('next-btn').classList.toggle('hidden', currentStep === 4);
     document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 4);
@@ -102,83 +143,69 @@ window.renderStep = () => {
 
 window.saveField = async (id, value, type = 'status') => {
     if (!userProgress[id]) userProgress[id] = {};
-    if (type === 'explanation') userProgress[id].explanation = value;
-    else if (type === 'deadline') userProgress[id].deadline = value;
-    else userProgress[id].status = value;
+    
+    // New: Track status changes and timestamps
+    if (type === 'status' && userProgress[id].status !== value) {
+        if (!changeHistory[id]) changeHistory[id] = [];
+        changeHistory[id].push({
+            from: userProgress[id].status || 'Unset',
+            to: value,
+            timestamp: new Date().toISOString()
+        });
+        userProgress[id].status = value;
+    } else if (type === 'explanation') {
+        userProgress[id].explanation = value;
+    } else if (type === 'deadline') {
+        userProgress[id].deadline = value;
+    } else if (type === 'status') {
+        userProgress[id].status = value;
+    }
 
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
         responses: userProgress,
+        history: changeHistory,
         lastUpdated: new Date().toISOString()
     }, { merge: true });
 };
 
-function renderAuditQuestion(q, saved) {
+function renderAuditQuestion(q, saved, isPriority) {
     const cardStatus = saved.status === 'Yes' ? 'met-card' : (saved.status ? 'action-card' : '');
+    const priorityBadge = isPriority ? `<span class="bg-red-600 text-white px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter mb-2 inline-block">Unresolved Action</span>` : '';
+    
     return `
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 card-focus ${cardStatus}">
+            ${priorityBadge}
             <p class="font-bold text-lg text-slate-800 mb-6 leading-snug">${q.text}</p>
             <div class="flex flex-wrap gap-8">
                 ${['Yes', 'Partially', 'No'].map(v => `
                     <label class="flex items-center gap-3 cursor-pointer group">
                         <input type="radio" name="${q.id}" value="${v}" ${saved.status === v ? 'checked' : ''} 
-                        onchange="saveField('${q.id}', '${v}'); renderStep();">
+                        onchange="saveField('${q.id}', '${v}', 'status'); renderStep();">
                         <span class="text-sm font-bold uppercase tracking-widest text-slate-500 group-hover:text-teal-900 transition-colors">${v}</span>
                     </label>
                 `).join('')}
             </div>
             <div class="${(saved.status === 'Partially' || saved.status === 'No') ? '' : 'hidden'} mt-6 pt-6 border-t border-slate-100 space-y-4">
-                <p class="text-[10px] font-black uppercase text-red-600 tracking-widest">Action Plan Required</p>
-                <textarea placeholder="Please detail the current situation and required actions..." 
-                    onchange="saveField('${q.id}', this.value, 'explanation')" 
-                    class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-red-200 outline-none transition-all">${saved.explanation || ''}</textarea>
-                <div class="flex items-center gap-4">
-                    <span class="text-xs font-bold text-slate-500 uppercase">Target Date:</span>
-                    <input type="date" value="${saved.deadline || ''}" 
-                        onchange="saveField('${q.id}', this.value, 'deadline')" 
-                        class="bg-slate-50 border-none p-2 px-4 rounded-xl text-sm focus:ring-2 focus:ring-red-200 outline-none">
-                </div>
+                <textarea placeholder="Action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-red-200 outline-none transition-all">${saved.explanation || ''}</textarea>
+                <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border-none p-2 px-4 rounded-xl text-sm focus:ring-2 focus:ring-red-200 outline-none">
             </div>
         </div>
     `;
 }
 
 function renderTextField(q, saved) {
-    return `
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 card-focus met-card">
-            <label class="block font-bold text-slate-800 mb-4">${q.text}</label>
-            <input type="text" value="${saved.status || ''}" 
-                onchange="saveField('${q.id}', this.value)" 
-                class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-teal-700 outline-none transition-all">
-        </div>
-    `;
+    return `<div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 card-focus met-card"><label class="block font-bold text-slate-800 mb-4">${q.text}</label><input type="text" value="${saved.status || ''}" onchange="saveField('${q.id}', this.value)" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-teal-700 outline-none transition-all"></div>`;
 }
 
 function renderSelectField(q, saved) {
-    return `
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 card-focus met-card">
-            <label class="block font-bold text-slate-800 mb-4">${q.text}</label>
-            <select onchange="saveField('${q.id}', this.value)" 
-                class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-teal-700 outline-none transition-all">
-                <option value="">Select an option...</option>
-                ${q.options.map(o => `<option value="${o}" ${saved.status === o ? 'selected' : ''}>${o}</option>`).join('')}
-            </select>
-        </div>
-    `;
+    return `<div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 card-focus met-card"><label class="block font-bold text-slate-800 mb-4">${q.text}</label><select onchange="saveField('${q.id}', this.value)" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-teal-700 outline-none transition-all"><option value="">Select...</option>${q.options.map(o => `<option value="${o}" ${saved.status === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
 }
 
 window.changeSection = (dir) => {
-    const sectionQuestions = sections[currentStep].questions;
-    const allAnswered = sectionQuestions.every(q => userProgress[q.id] && userProgress[q.id].status);
-    
-    if (dir === 1 && !allAnswered) return alert("Please complete all sections on this page to move forward.");
-    
     currentStep += dir;
     renderStep();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.handleLogout = async () => { await signOut(auth); location.reload(); };
-window.finalSubmit = () => { 
-    alert("Project FOCUS record finalized. Thank you for ensuring Humberside Scouts remains a safe environment."); 
-    handleLogout(); 
-};
+window.finalSubmit = () => { alert("Audit updated and saved. Thank you."); handleLogout(); };
