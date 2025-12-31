@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg",
@@ -15,100 +15,65 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let allAuditData = [];
-let allUserProfiles = [];
+// FIX: Improved Toggle Logic
+window.toggleAuthMode = () => {
+    const title = document.getElementById('auth-title');
+    const desc = document.getElementById('auth-desc');
+    const regFields = document.getElementById('register-fields');
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const toggleLink = document.getElementById('toggle-link');
 
-window.handleAdminLogin = async () => {
-    const email = document.getElementById('admin-email').value;
-    const pass = document.getElementById('admin-password').value;
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        document.getElementById('admin-auth-ui').classList.add('hidden');
-        document.getElementById('dashboard-ui').classList.remove('hidden');
-        document.getElementById('admin-nav').classList.remove('hidden');
-        await loadAdminData();
-    } catch (e) { alert("SME Login Failed."); }
+    if (title.innerText === "Welcome Back.") {
+        title.innerText = "Join Project FOCUS";
+        desc.innerText = "Create your auditor account.";
+        regFields.classList.remove('hidden');
+        loginBtn.classList.add('hidden');
+        registerBtn.classList.remove('hidden');
+        toggleLink.innerText = "Already have an account? Sign In";
+    } else {
+        title.innerText = "Welcome Back.";
+        desc.innerText = "Please authenticate to continue.";
+        regFields.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
+        registerBtn.classList.add('hidden');
+        toggleLink.innerText = "Need an account? Register here";
+    }
 };
 
-async function loadAdminData() {
+window.handleRegister = async () => {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+    const profile = {
+        name: document.getElementById('reg-name').value,
+        district: document.getElementById('reg-district').value,
+        group: document.getElementById('reg-group').value,
+        section: document.getElementById('reg-section').value,
+        isVerified: false,
+        createdAt: new Date().toISOString()
+    };
+
+    if (!profile.district || !profile.name) return alert("Please fill in all registration fields.");
+
     try {
-        // Fetch both collections simultaneously
-        const [auditSnap, userSnap] = await Promise.all([
-            getDocs(collection(db, "project_focus_records")),
-            getDocs(collection(db, "users"))
-        ]);
+        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+        await setDoc(doc(db, "users", userCred.user.uid), profile);
         
-        allAuditData = auditSnap.docs.map(d => ({uid: d.id, ...d.data()}));
-        allUserProfiles = userSnap.docs.map(d => ({uid: d.id, ...d.data()}));
-
-        renderGrid();
-        renderUserList();
-    } catch (err) { alert("Error connecting to database."); }
-}
-
-function renderGrid() {
-    const districts = ["Beverley and Hornsea", "Blacktoft Beacon", "City of Hull", "County Section", "Grimsby and Cleethorpes", "North Lincolnshire", "Pocklington", "South Holderness", "Wolds and Coast"];
-    const grid = document.getElementById('district-grid');
-    
-    grid.innerHTML = districts.map(district => {
-        // Link audits to their user profiles to find the district
-        const districtAudits = allAuditData.filter(audit => {
-            const profile = allUserProfiles.find(u => u.uid === audit.uid);
-            return profile && profile.district === district;
-        });
-
-        const redFlags = districtAudits.filter(a => 
-            Object.values(a.responses || {}).some(r => r.status === "No" || r.status === "Partially")
-        ).length;
-
-        return `
-            <div onclick="showDistrictDetails('${district}')" class="cursor-pointer bg-white p-8 rounded-[2rem] shadow-xl border-b-8 transition-all hover:scale-[1.03] ${redFlags > 0 ? 'border-red-500' : 'border-emerald-500'}">
-                <h3 class="font-black text-xl text-[#003945] uppercase italic tracking-tighter mb-1">${district}</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${districtAudits.length} Active Audits</p>
-                <div class="mt-6 flex justify-between items-end">
-                    <span class="text-2xl font-black ${redFlags > 0 ? 'text-red-600' : 'text-emerald-600'}">${redFlags}</span>
-                    <span class="text-[9px] font-black uppercase text-slate-400 pb-1">Issues Found</span>
-                </div>
-            </div>`;
-    }).join('');
-}
-
-window.showDistrictDetails = (district) => {
-    // Logic to filter allAuditData by looking up profiles in allUserProfiles
-    const auditsInDistrict = allAuditData.filter(audit => {
-        const profile = allUserProfiles.find(u => u.uid === audit.uid);
-        return profile && profile.district === district;
-    });
-
-    document.getElementById('selected-district-name').innerText = district;
-    document.getElementById('response-view').classList.remove('hidden');
-    
-    const tbody = document.getElementById('response-table-body');
-    tbody.innerHTML = auditsInDistrict.map(a => {
-        const profile = allUserProfiles.find(u => u.uid === a.uid) || {};
-        // ... [Rest of row rendering logic using 'profile' for Name/Group/Section] ...
-    }).join('');
+        // Show the verification message
+        document.getElementById('auth-ui').innerHTML = `
+            <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl border-t-8 border-[#ffe627] text-center">
+                <h2 class="text-2xl font-black text-[#003945] uppercase mb-4">Account Created!</h2>
+                <p class="text-slate-600 mb-6">
+                    Please bear with us whilst we verify your account! This usually takes up to 48hrs. 
+                    Check back soon and try logging in with your email and password.
+                </p>
+                <p class="text-sm text-slate-400">
+                    Any issues, contact <a href="mailto:assurance@humbersidescouts.org.uk" class="text-[#003945] font-bold underline">assurance@humbersidescouts.org.uk</a>.
+                </p>
+                <button onclick="location.reload()" class="mt-8 bg-[#003945] text-white px-8 py-3 rounded-full font-black uppercase text-xs">Return to Login</button>
+            </div>
+        `;
+    } catch (e) { alert("Registration Error: " + e.message); }
 };
 
-window.renderUserList = () => {
-    const tbody = document.getElementById('user-table-body');
-    const pending = allUserProfiles.filter(u => !u.isVerified);
-    
-    tbody.innerHTML = pending.length ? pending.map(u => `
-        <tr class="hover:bg-slate-50 transition-all">
-            <td class="p-6 font-bold text-[#003945]">${u.email}</td>
-            <td class="p-6">
-                <div class="text-[10px] font-black uppercase text-slate-400 leading-tight mb-1">${u.district}</div>
-                <div class="text-sm font-black text-slate-700 uppercase">${u.group} - ${u.section}</div>
-            </td>
-            <td class="p-6 text-right">
-                <button onclick="verifyUser('${u.uid}')" class="scout-gradient text-white text-[10px] font-black uppercase px-6 py-2 rounded-full shadow-lg">Verify Access</button>
-            </td>
-        </tr>`).join('') : `<tr><td colspan="3" class="p-20 text-center text-slate-300 italic font-bold">No pending requests.</td></tr>`;
-};
-
-window.verifyUser = async (uid) => {
-    await updateDoc(doc(db, "users", uid), { isVerified: true });
-    alert("User Approved.");
-    loadAdminData();
-};
+// ... Rest of your handleLogin and audit logic ...
