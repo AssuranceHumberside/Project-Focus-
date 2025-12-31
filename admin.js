@@ -50,11 +50,8 @@ window.handleAdminLogin = async () => {
 
 window.handleAdminForgotPassword = async () => {
     const email = document.getElementById('admin-email').value.trim();
-    if (!email) return alert("Please enter your SME email address first.");
-    try {
-        await sendPasswordResetEmail(auth, email);
-        alert("SME Password reset link sent.");
-    } catch (e) { alert("Error: " + e.message); }
+    if (!email) return alert("Please enter SME email address.");
+    try { await sendPasswordResetEmail(auth, email); alert("SME reset link sent."); } catch (e) { alert(e.message); }
 };
 
 async function loadAdminData() {
@@ -64,20 +61,31 @@ async function loadAdminData() {
     ]);
     allAuditData = auditSnap.docs.map(d => ({uid: d.id, ...d.data()}));
     allUserProfiles = userSnap.docs.map(d => ({uid: d.id, ...d.data()}));
-    renderGrid();
-    renderUserList();
+    renderGrid(); renderUserList();
 }
+
+window.exportToCSV = () => {
+    let csv = "data:text/csv;charset=utf-8,District,Group,Section,Auditor,Email,Question,Status,Action,Deadline\r\n";
+    allAuditData.forEach(audit => {
+        const p = allUserProfiles.find(u => u.uid === audit.uid) || {};
+        Object.entries(audit.responses || {}).forEach(([qId, val]) => {
+            csv += `${p.district},${p.group},${p.section},${p.name},${p.email},"${questionMap[qId]}",${val.status},"${val.explanation}",${val.deadline}\r\n`;
+        });
+    });
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csv));
+    link.setAttribute("download", "Project_Focus_Export.csv");
+    document.body.appendChild(link); link.click();
+};
 
 window.showDistrictDetails = (district) => {
     const audits = allAuditData.filter(a => {
         const profile = allUserProfiles.find(u => u.uid === a.uid) || a.userDetails || {};
         return profile.district === district;
     });
-
     document.getElementById('selected-district-name').innerText = district;
     document.getElementById('response-view').classList.remove('hidden');
     const tbody = document.getElementById('response-table-body');
-
     tbody.innerHTML = audits.map(a => {
         const profile = allUserProfiles.find(u => u.uid === a.uid) || a.userDetails || {};
         let issuesHtml = [];
@@ -85,22 +93,19 @@ window.showDistrictDetails = (district) => {
             if (val.status && val.status !== "Yes") {
                 issuesHtml.push(`
                     <div class="mb-4 p-5 bg-red-50 rounded-[1.5rem] border-l-4 border-red-500 shadow-sm">
-                        <div class="text-[11px] font-black text-slate-800 uppercase mb-2 tracking-tight">${questionMap[id] || id.replace(/_/g, ' ')}</div>
-                        <div class="text-[11px] text-slate-600 italic bg-white p-3 rounded-xl border border-red-100 mb-2 font-medium">${val.explanation || 'No Comment'}</div>
-                        <div class="flex gap-2">
-                             <span class="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded font-black uppercase">STATUS: ${val.status}</span>
-                             <span class="text-[8px] bg-slate-800 text-white px-2 py-0.5 rounded font-black uppercase">TARGET: ${val.deadline || 'TBC'}</span>
-                        </div>
+                        <div class="text-[11px] font-black text-slate-800 uppercase mb-2">${questionMap[id] || id}</div>
+                        <div class="text-[11px] text-slate-600 italic bg-white p-3 rounded-xl border mb-2">${val.explanation || 'No Comment'}</div>
+                        <div class="flex gap-2"><span class="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded uppercase">${val.status}</span><span class="text-[8px] bg-slate-800 text-white px-2 py-0.5 rounded uppercase">${val.deadline}</span></div>
                     </div>`);
             }
         }
         return `
             <tr class="hover:bg-slate-50 border-b last:border-0">
                 <td class="p-10 align-top border-r w-1/3">
-                    <div class="font-black text-[#003945] text-2xl uppercase italic tracking-tighter mb-2 leading-none">${profile.group || 'N/A'}</div>
+                    <div class="font-black text-[#003945] text-2xl uppercase italic leading-none mb-2">${profile.group || 'N/A'}</div>
                     <div class="text-[11px] font-black text-[#7413dc] bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-8 border border-purple-100">${profile.section || 'N/A'}</div>
-                    <div class="pt-6 border-t border-slate-100">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 underline decoration-teal-500">${profile.email || a.email || 'Email Missing'}</span>
+                    <div class="pt-6 border-t border-slate-100 space-y-3">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block underline decoration-teal-500">${profile.email || a.email || 'Email Missing'}</span>
                         <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${profile.name || 'Anonymous'}</div>
                     </div>
                 </td>
