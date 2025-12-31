@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -48,6 +48,15 @@ window.handleAdminLogin = async () => {
     try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { alert("Login Error: " + e.message); }
 };
 
+window.handleAdminForgotPassword = async () => {
+    const email = document.getElementById('admin-email').value.trim();
+    if (!email) return alert("Please enter your SME email address first.");
+    try {
+        await sendPasswordResetEmail(auth, email);
+        alert("SME Password reset link sent.");
+    } catch (e) { alert("Error: " + e.message); }
+};
+
 async function loadAdminData() {
     const [auditSnap, userSnap] = await Promise.all([
         getDocs(collection(db, "project_focus_records")),
@@ -86,15 +95,13 @@ window.showDistrictDetails = (district) => {
             }
         }
         return `
-            <tr class="hover:bg-slate-50 transition-colors border-b last:border-0">
+            <tr class="hover:bg-slate-50 border-b last:border-0">
                 <td class="p-10 align-top border-r w-1/3">
-                    <div class="font-black text-[#003945] text-2xl uppercase italic tracking-tighter leading-none mb-2">${profile.group || 'N/A'}</div>
+                    <div class="font-black text-[#003945] text-2xl uppercase italic tracking-tighter mb-2 leading-none">${profile.group || 'N/A'}</div>
                     <div class="text-[11px] font-black text-[#7413dc] bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-8 border border-purple-100">${profile.section || 'N/A'}</div>
-                    <div class="pt-6 border-t border-slate-100 space-y-3">
-                        <div>
-                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 underline decoration-teal-500">${profile.email || a.email || 'Email Missing'}</span>
-                            <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${profile.name || 'Anonymous'}</div>
-                        </div>
+                    <div class="pt-6 border-t border-slate-100">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 underline decoration-teal-500">${profile.email || a.email || 'Email Missing'}</span>
+                        <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${profile.name || 'Anonymous'}</div>
                     </div>
                 </td>
                 <td class="p-10 align-top">${issuesHtml.length > 0 ? issuesHtml.join('') : '<div class="text-emerald-600 font-black uppercase text-xs tracking-widest italic flex items-center gap-2">✓ Fully Assured</div>'}</td>
