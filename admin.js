@@ -1,71 +1,76 @@
-// ... (Imports and Auth Monitoring same as previous) ...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SME Admin - Project FOCUS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --scout-teal: #003945; }
+        body { font-family: 'Nunito Sans', sans-serif; background: #f1f5f9; }
+        .scout-gradient { background: linear-gradient(135deg, var(--scout-teal) 0%, #001a20 100%); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <header class="scout-gradient text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center text-white">
+            <div class="flex items-center gap-4">
+                <img src="Humberside Logo.png" alt="Logo" class="h-10 bg-white p-1 rounded shadow-sm">
+                <h1 class="text-xl font-black uppercase text-white">Admin Gateway</h1>
+            </div>
+            <div id="admin-nav" class="hidden flex gap-2">
+                <button onclick="switchTab('audits')" class="text-[10px] font-black uppercase px-5 py-2 rounded-full bg-white/10 hover:bg-white text-white hover:text-teal-900">District Audits</button>
+                <button onclick="switchTab('users')" class="text-[10px] font-black uppercase px-5 py-2 rounded-full bg-white/10 hover:bg-white text-white hover:text-teal-900">Verify Access</button>
+                <button onclick="location.reload()" class="text-[10px] font-black uppercase px-5 py-2 rounded-full border border-white/30 text-white">Logout</button>
+            </div>
+        </div>
+    </header>
 
-async function loadAdminData() {
-    const [auditSnap, userSnap] = await Promise.all([
-        getDocs(collection(db, "project_focus_records")),
-        getDocs(collection(db, "users"))
-    ]);
-    allAuditData = auditSnap.docs.map(d => ({uid: d.id, ...d.data()}));
-    allUserProfiles = userSnap.docs.map(d => ({uid: d.id, ...d.data()}));
-    renderGrid();
-    renderUserList();
-}
+    <main class="max-w-7xl mx-auto p-8">
+        <div id="admin-auth-ui" class="max-w-md mx-auto mt-20">
+            <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl border-b-8 border-yellow-400">
+                <h2 class="text-2xl font-black text-center mb-8 uppercase text-teal-900 italic">SME Sign In</h2>
+                <div class="space-y-4">
+                    <input type="email" id="admin-email" placeholder="SME Email" class="w-full bg-slate-50 p-5 rounded-2xl outline-none border focus:ring-2 focus:ring-teal-700">
+                    <input type="password" id="admin-password" placeholder="Password" class="w-full bg-slate-50 p-5 rounded-2xl outline-none border focus:ring-2 focus:ring-teal-700">
+                    <button onclick="handleAdminLogin()" class="w-full scout-gradient text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl">Enter Dashboard</button>
+                </div>
+            </div>
+        </div>
 
-window.showDistrictDetails = (district) => {
-    const audits = allAuditData.filter(a => {
-        const profile = allUserProfiles.find(u => u.uid === a.uid);
-        return profile && profile.district === district;
-    });
-
-    document.getElementById('selected-district-name').innerText = district;
-    document.getElementById('response-view').classList.remove('hidden');
-    const tbody = document.getElementById('response-table-body');
-
-    tbody.innerHTML = audits.map(a => {
-        const profile = allUserProfiles.find(u => u.uid === a.uid) || {};
-        const res = a.responses || {};
-        const trail = a.trail || {};
-        let issuesHtml = [];
-
-        // Question mapping for the detailed view
-        for (const [id, val] of Object.entries(res)) {
-            const logs = (trail[id] || []).map(log => `
-                <div class="text-[9px] font-black text-emerald-600 uppercase mt-2 border-l-2 border-emerald-500 pl-2">
-                    Resolved: ${log.from} → ${log.to} (${new Date(log.date).toLocaleDateString()})
-                </div>`).join('');
-
-            if (val.status !== "Yes") {
-                issuesHtml.push(`
-                    <div class="mb-4 p-5 bg-red-50 rounded-[1.5rem] border-l-4 border-red-500 shadow-sm">
-                        <div class="text-[11px] font-black text-slate-800 uppercase mb-2 leading-tight">${id.replace(/_/g, ' ')}</div>
-                        <div class="text-[11px] text-slate-600 italic bg-white p-3 rounded-xl border border-red-100 mb-2">${val.explanation || 'No Comment'}</div>
-                        <div class="flex gap-2">
-                             <span class="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded font-black uppercase">${val.status}</span>
-                             <span class="text-[8px] bg-slate-800 text-white px-2 py-0.5 rounded font-black uppercase">Deadline: ${val.deadline || 'TBC'}</span>
-                        </div>
-                        ${logs}
-                    </div>`);
-            } else if (trail[id]) {
-                issuesHtml.push(`
-                    <div class="mb-4 p-5 bg-emerald-50 rounded-[1.5rem] border-l-4 border-emerald-500 shadow-sm opacity-60">
-                         <div class="text-[10px] font-black text-slate-400 uppercase leading-tight">${id.replace(/_/g, ' ')}</div>
-                         ${logs}
-                    </div>`);
-            }
-        }
-
-        return `
-            <tr class="hover:bg-slate-50 transition-colors">
-                <td class="p-10 align-top border-r w-1/3">
-                    <div class="font-black text-[#003945] text-2xl uppercase italic tracking-tighter leading-none mb-2">${profile.group || 'N/A'}</div>
-                    <div class="text-[11px] font-black text-[#7413dc] bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-8 border border-purple-100">${profile.section || 'N/A'}</div>
-                    <div class="pt-6 border-t border-slate-100">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 underline decoration-teal-500">${profile.email || 'Email Missing'}</span>
-                        <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${profile.name || 'Anonymous'}</div>
+        <div id="dashboard-ui" class="hidden">
+            <div id="tab-audits">
+                <div id="district-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"></div>
+                <div id="response-view" class="hidden bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border">
+                    <div class="p-8 scout-gradient text-white flex justify-between items-center">
+                        <h2 id="selected-district-name" class="text-2xl font-black uppercase italic text-white"></h2>
+                        <button onclick="closeDetails()" class="bg-white/20 px-6 py-2 rounded-full text-xs font-black uppercase text-white">Back</button>
                     </div>
-                </td>
-                <td class="p-10 align-top">${issuesHtml.length > 0 ? issuesHtml.join('') : '<div class="text-emerald-600 font-black uppercase text-xs tracking-widest italic flex items-center gap-2">✓ Fully Assured & POR Compliant</div>'}</td>
-            </tr>`;
-    }).join('');
-    window.scrollTo({ top: document.getElementById('response-view').offsetTop - 20, behavior: 'smooth' });
-};
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b">
+                            <tr>
+                                <th class="p-6 font-black text-[10px] uppercase text-slate-400">Auditor & Unit</th>
+                                <th class="p-6 font-black text-[10px] uppercase text-slate-400">Safety Status & History</th>
+                            </tr>
+                        </thead>
+                        <tbody id="response-table-body" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-users" class="hidden bg-white rounded-[2.5rem] shadow-xl overflow-hidden border">
+                <div class="p-10 border-b bg-slate-50"><h2 class="text-3xl font-black text-teal-900 uppercase italic">Access Requests</h2></div>
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 text-[10px] font-black uppercase text-slate-400">
+                        <tr><th class="p-6">User Email</th><th class="p-6">Unit</th><th class="p-6 text-right">Action</th></tr>
+                    </thead>
+                    <tbody id="user-table-body" class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
