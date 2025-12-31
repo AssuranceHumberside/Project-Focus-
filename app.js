@@ -68,23 +68,62 @@ const sections = [
     ]}
 ];
 
+window.handleLogin = async () => {
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value;
+    try {
+        const userCred = await signInWithEmailAndPassword(auth, email, pass);
+        const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
+        
+        if (!userSnap.exists() || !userSnap.data().isVerified) {
+            alert("Verification Pending. Please check back soon.");
+            await signOut(auth);
+            return;
+        }
+
+        profileData = userSnap.data();
+        const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
+        if (recordSnap.exists()) {
+            const data = recordSnap.data();
+            userProgress = data.responses || {};
+            auditTrail = data.trail || {};
+            currentStep = data.lastStep || 0; // AUTO-RESUME
+        }
+        
+        document.getElementById('auth-ui').classList.add('hidden');
+        document.getElementById('logout-btn').classList.remove('hidden');
+        document.getElementById('county-alert').classList.remove('hidden');
+        document.getElementById('landing-dashboard').classList.remove('hidden');
+    } catch (e) { alert("Login Error: " + e.message); }
+};
+
+window.startAudit = () => {
+    document.getElementById('landing-dashboard').classList.add('hidden');
+    document.getElementById('audit-ui').classList.remove('hidden');
+    renderStep();
+};
+
 window.renderStep = () => {
     const section = sections[currentStep];
     const formContainer = document.getElementById('form-container');
     const metContainer = document.getElementById('met-container');
     const metDropdown = document.getElementById('met-dropdown');
+    
     document.getElementById('section-title').innerText = section.title;
     for(let i=1; i<=5; i++) {
         const pill = document.getElementById(`prog-${i}`);
         if(pill) pill.classList.toggle('progress-active', i <= currentStep + 1);
     }
+
     formContainer.innerHTML = "";
     metContainer.innerHTML = "";
     let metCount = 0;
+
     section.questions.forEach(q => {
         const saved = userProgress[q.id] || {};
         const isMet = saved.status === 'Yes';
         const isIssue = saved.status === 'Partially' || saved.status === 'No';
+        
         const html = `
             <div class="bg-white p-8 card-focus ${isMet ? 'met-card' : (saved.status ? 'action-card' : '')}">
                 <p class="font-bold text-lg text-slate-800 mb-6 leading-tight">${q.text}</p>
@@ -103,47 +142,15 @@ window.renderStep = () => {
                     </div>
                 </div>
             </div>`;
-        if (isMet) { metContainer.innerHTML += html; metCount++; } else { formContainer.innerHTML += html; }
+
+        if (isMet) { metContainer.innerHTML += html; metCount++; } 
+        else { formContainer.innerHTML += html; }
     });
+
     metDropdown.classList.toggle('hidden', metCount === 0);
     document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 0);
     document.getElementById('next-btn').classList.toggle('hidden', currentStep === 4);
     document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 4);
-};
-
-window.handleLogin = async () => {
-    const email = document.getElementById('email').value.trim();
-    const pass = document.getElementById('password').value;
-    try {
-        const userCred = await signInWithEmailAndPassword(auth, email, pass);
-        const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
-        if (!userSnap.exists() || !userSnap.data().isVerified) {
-            alert("Verification Pending. Please check back in 48hrs.");
-            await signOut(auth);
-            return;
-        }
-        profileData = userSnap.data();
-        const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
-        if (recordSnap.exists()) {
-            const data = recordSnap.data();
-            userProgress = data.responses || {};
-            auditTrail = data.trail || {};
-            currentStep = data.lastStep || 0;
-        }
-        document.getElementById('auth-ui').classList.add('hidden');
-        document.getElementById('audit-ui').classList.remove('hidden');
-        document.getElementById('logout-btn').classList.remove('hidden');
-        renderStep();
-    } catch (e) { alert("Login Error: " + e.message); }
-};
-
-window.handleForgotPassword = async () => {
-    const email = document.getElementById('email').value.trim();
-    if (!email) return alert("Please enter your email address in the field above first.");
-    try {
-        await sendPasswordResetEmail(auth, email);
-        alert("A password reset link has been sent to your email.");
-    } catch (e) { alert("Error: " + e.message); }
 };
 
 window.saveField = async (id, value, type = 'status') => {
@@ -171,7 +178,28 @@ window.changeSection = async (dir) => {
     window.scrollTo({top: 0, behavior: 'smooth'}); 
 };
 
+window.finalSubmit = () => {
+    document.getElementById('audit-ui').classList.add('hidden');
+    document.getElementById('thank-you-ui').classList.remove('hidden');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+};
+
+window.backToDashboard = () => {
+    document.getElementById('thank-you-ui').classList.add('hidden');
+    document.getElementById('landing-dashboard').classList.remove('hidden');
+};
+
+window.handleForgotPassword = async () => {
+    const email = document.getElementById('email').value.trim();
+    if (!email) return alert("Please enter your email address in the field above first.");
+    try {
+        await sendPasswordResetEmail(auth, email);
+        alert("A password reset link has been sent to your email.");
+    } catch (e) { alert("Error: " + e.message); }
+};
+
 window.handleLogout = () => { signOut(auth); location.reload(); };
+
 window.toggleAuthMode = () => {
     const isLogin = document.getElementById('auth-title').innerText === "Volunteer Portal";
     document.getElementById('auth-title').innerText = isLogin ? "Join Project FOCUS" : "Volunteer Portal";
@@ -193,9 +221,6 @@ window.handleRegister = async () => {
     try {
         const userCred = await createUserWithEmailAndPassword(auth, email, pass);
         await setDoc(doc(db, "users", userCred.user.uid), profile);
-        alert("Registered! Awaiting verification.");
-        location.reload();
+        alert("Registered! Awaiting verification."); location.reload();
     } catch (e) { alert(e.message); }
 };
-
-window.finalSubmit = () => { alert("Record Finalized."); handleLogout(); };
