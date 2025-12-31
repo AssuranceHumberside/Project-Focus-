@@ -20,28 +20,54 @@ let userProgress = {};
 let profileData = {};
 
 const sections = [
-    { title: "Preparation", questions: [
-        { id: "q_dbs", text: "Are all DBS and Welcome Conversations complete for the team?" },
-        { id: "q_risk", text: "Are written risk assessments shared for every activity?" },
-        { id: "q_training", text: "Is all mandatory training (Safety/Safeguarding) up to date?" }
+    { title: "People & Training", questions: [
+        { id: "q_dbs", text: "Are all DBS, AAC, and Welcome Conversations complete for the team?" },
+        { id: "q_training", text: "Has every leader completed mandatory safety and safeguarding training?" },
+        { id: "q_firstaid", text: "Is there at least one adult with a valid First Aid certificate present at every meeting?" },
+        { id: "q_yl", text: "Do Young Leaders receive a proper induction and follow the YL training scheme?" },
+        { id: "q_yellow", text: "Does every adult volunteer have access to and understand the Yellow Card?" },
+        { id: "q_adult_ratio", text: "Are adult-to-young-person ratios always met or exceeded for your section?" },
+        { id: "q_helper_dbs", text: "Do all regular parent helpers and non-members have a valid DBS check?" }
     ]},
-    { title: "Meetings", questions: [
-        { id: "q12", text: "Is there a clear supervision and ratio plan for all sessions?" },
-        { id: "q37", text: "Are accurate headcounts and registers maintained live?" },
-        { id: "q31", text: "Is a first-aid kit always accessible to all adults?" }
+    { title: "Planning & Approvals", questions: [
+        { id: "q_risk", text: "Is a written risk assessment produced for every activity and shared with all adults?" },
+        { id: "q_approval", text: "Are all activities away from your regular venue approved by the Lead Volunteer?" },
+        { id: "q14", text: "Is a robust InTouch process communicated for every meeting and trip?" },
+        { id: "q_nightsaway", text: "For overnight events, is a Nights Away Permit holder always in charge?" },
+        { id: "q_permits", text: "Are Adventurous Activity Permits checked and valid before high-risk activities?" },
+        { id: "q_gdpr", text: "Is personal data (medical forms/contact info) stored securely and disposed of correctly?" },
+        { id: "q_inclusion", text: "Are reasonable adjustments made to ensure the program is inclusive for all members?" }
     ]},
-    { title: "Environment", questions: [
-        { id: "q20", text: "Are tripping/slipping hazards actively identified and reduced?" },
-        { id: "q18", text: "Is equipment stored safely when not in use?" },
-        { id: "q30", text: "Is equipment regularly inspected for safe working order?" }
+    { title: "Section Meetings", questions: [
+        { id: "q37", text: "Does the Leader in Charge maintain an accurate register and perform headcounts?" },
+        { id: "q16", text: "Are up-to-date medical and health details immediately accessible during activities?" },
+        { id: "q33", text: "Do you have a clear emergency plan, and do all adults know their specific roles?" },
+        { id: "q31", text: "Is a fully-stocked first-aid kit available and easily accessible at all times?" },
+        { id: "q42", text: "Does every adult understand how to record and report accidents or near-misses?" },
+        { id: "q_supervision", text: "Is there effective supervision during 'free time' and structured activities?" },
+        { id: "q_intouch_test", text: "Do you periodically test your InTouch system to ensure it works in an emergency?" }
     ]},
-    { title: "Culture", questions: [
-        { id: "q_dynamic", text: "Do you actively 'check and challenge' safety during meetings?" },
-        { id: "q36", text: "Is a specific 'Leader in Charge' clearly identified for every session?" },
-        { id: "q43", text: "Is safety a standard talking point in post-activity reviews?" }
+    { title: "The Environment", questions: [
+        { id: "q20", text: "Have all practical steps been taken to reduce tripping or slipping hazards?" },
+        { id: "q18", text: "Are chairs, tables, and equipment stored safely and securely when not in use?" },
+        { id: "q25", text: "Has the potential for falls onto sharp objects or hard surfaces been minimised?" },
+        { id: "q22", text: "Do you check for overhead hazards and ensure lights are appropriately guarded?" },
+        { id: "q30", text: "Is all equipment regularly inspected to ensure it is safe and in good order?" },
+        { id: "q_fire", text: "Are you aware of the fire exit locations and the evacuation plan for your venue?" },
+        { id: "q_hygiene", text: "Are handwashing facilities or sanitiser available, especially before food or games?" }
+    ]},
+    { title: "Program & Culture", questions: [
+        { id: "q27", text: "Are all games and activities suitable for the age and ability of your participants?" },
+        { id: "q28", text: "Are the rules of every game clearly briefed and understood before play begins?" },
+        { id: "q_dynamic", text: "Do you actively 'check and challenge' safety throughout the session?" },
+        { id: "q36", text: "Is a specific 'Leader in Charge' clearly identified to everyone for every session?" },
+        { id: "q39", text: "Does the Leader in Charge assign specific oversight responsibilities to other adults?" },
+        { id: "q43", text: "Is safety a standard talking point in your team's planning and reviews?" },
+        { id: "q49", text: "Is all safety-specific equipment at the venue inspected on a regular basis?" }
     ]}
 ];
 
+// UI Toggle between Login and Registration
 window.toggleAuthMode = () => {
     const title = document.getElementById('auth-title');
     const isLogin = title.innerText === "Welcome Back.";
@@ -66,30 +92,19 @@ window.handleRegister = async () => {
         createdAt: new Date().toISOString()
     };
 
-    if (!profile.district || !profile.name) return alert("Please fill in all registration fields.");
+    if (!profile.district || !profile.name || !email) return alert("Please fill in all registration fields.");
 
     try {
         const userCred = await createUserWithEmailAndPassword(auth, email, pass);
         await setDoc(doc(db, "users", userCred.user.uid), profile);
         
-        // Show the verification success screen
         document.getElementById('auth-card').innerHTML = `
-            <div class="text-center animate-fade-in py-10">
-                <div class="mb-6 text-emerald-600">
-                    <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h2 class="text-2xl font-black text-[#003945] uppercase italic mb-4">Account Created!</h2>
-                <p class="text-slate-600 font-medium mb-6 leading-relaxed">
-                    Please bear with us whilst we verify your account! This usually takes up to 48hrs. 
-                    Check back soon and try logging in with your email and password set here.
-                </p>
-                <p class="text-sm text-slate-400">
-                    Any issues, contact <a href="mailto:assurance@humbersidescouts.org.uk" class="text-[#003945] font-bold underline">assurance@humbersidescouts.org.uk</a>.
-                </p>
-                <button onclick="location.reload()" class="mt-8 bg-[#003945] text-white px-8 py-3 rounded-full font-black uppercase tracking-widest text-xs">Return to Login</button>
-            </div>
-        `;
-    } catch (e) { alert("Registration Error: " + e.message); }
+            <div class="text-center py-10">
+                <h2 class="text-2xl font-black text-[#003945] uppercase mb-4 italic">Account Created!</h2>
+                <p class="text-slate-600 mb-6 font-medium">Please bear with us whilst we verify your account! This usually takes up to 48hrs. Check back soon and try logging in. Any issues, contact assurance@humbersidescouts.org.uk</p>
+                <button onclick="location.reload()" class="scout-gradient text-white px-8 py-3 rounded-full font-black uppercase text-xs">Return to Login</button>
+            </div>`;
+    } catch (e) { alert(e.message); }
 };
 
 window.handleLogin = async () => {
@@ -97,12 +112,10 @@ window.handleLogin = async () => {
     const pass = document.getElementById('password').value;
     try {
         const userCred = await signInWithEmailAndPassword(auth, email, pass);
-        
-        // CRITICAL: Check verification status every login
         const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
         
         if (!userSnap.exists() || !userSnap.data().isVerified) {
-            alert("Please bear with us whilst we verify your account! This usually takes up to 48hrs. Check back soon and try logging in with your email and password set here. Any issues, contact assurance@humbersidescouts.org.uk");
+            alert("Please bear with us whilst we verify your account! This usually takes up to 48hrs.");
             await signOut(auth);
             return;
         }
@@ -123,39 +136,57 @@ window.renderStep = () => {
     const container = document.getElementById('form-container');
     document.getElementById('section-title').innerText = section.title;
 
-    for(let i=1; i<=4; i++) document.getElementById(`prog-${i}`).classList.toggle('progress-active', i <= currentStep + 1);
+    for(let i=1; i<=5; i++) {
+        const pill = document.getElementById(`prog-${i}`);
+        if(pill) pill.classList.toggle('progress-active', i <= currentStep + 1);
+    }
 
     container.innerHTML = section.questions.map(q => {
         const saved = userProgress[q.id] || {};
+        const isIssue = saved.status === 'Partially' || saved.status === 'No';
+        
         return `
             <div class="bg-white p-8 rounded-[1.5rem] shadow-sm border border-slate-100 card-focus ${saved.status === 'Yes' ? 'met-card' : (saved.status ? 'action-card' : '')}">
                 <p class="font-bold text-lg text-slate-800 mb-6 leading-tight">${q.text}</p>
                 <div class="flex gap-8">
                     ${['Yes', 'Partially', 'No'].map(v => `
-                        <label class="flex items-center gap-2 cursor-pointer font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-teal-900 transition-colors">
-                            <input type="radio" name="${q.id}" value="${v}" ${saved.status === v ? 'checked' : ''} onchange="saveField('${q.id}', '${v}')"> ${v}
+                        <label class="flex items-center gap-2 cursor-pointer font-black text-[10px] uppercase text-slate-400 hover:text-[#003945] transition-colors">
+                            <input type="radio" name="${q.id}" value="${v}" ${saved.status === v ? 'checked' : ''} onchange="saveField('${q.id}', '${v}', 'status')"> ${v}
                         </label>
                     `).join('')}
+                </div>
+                <div class="${isIssue ? '' : 'hidden'} mt-6 pt-6 border-t border-slate-100 space-y-4 animate-fade-in">
+                    <p class="text-[10px] font-black text-red-600 uppercase tracking-widest">Compliance Action Plan</p>
+                    <textarea placeholder="Describe how this standard will be met..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-red-100 outline-none">${saved.explanation || ''}</textarea>
+                    <div class="flex items-center gap-4">
+                        <span class="text-xs font-bold text-slate-500 uppercase">Target Completion:</span>
+                        <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border-none p-2 px-4 rounded-xl text-xs font-bold text-slate-600 outline-none">
+                    </div>
                 </div>
             </div>`;
     }).join('');
     
     document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 0);
-    document.getElementById('next-btn').classList.toggle('hidden', currentStep === 3);
-    document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 3);
+    document.getElementById('next-btn').classList.toggle('hidden', currentStep === 4);
+    document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 4);
 };
 
-window.saveField = async (id, value) => {
-    userProgress[id] = { status: value, time: new Date().toISOString() };
+window.saveField = async (id, value, type = 'status') => {
+    if (!userProgress[id]) userProgress[id] = {};
+    if (type === 'status') userProgress[id].status = value;
+    if (type === 'explanation') userProgress[id].explanation = value;
+    if (type === 'deadline') userProgress[id].deadline = value;
+
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
         email: profileData.email,
         responses: userProgress,
         userDetails: profileData,
         lastUpdated: new Date().toISOString()
     }, { merge: true });
-    renderStep();
+    
+    if (type === 'status') renderStep();
 };
 
 window.changeSection = (dir) => { currentStep += dir; renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); };
-window.handleLogout = () => { signOut(auth); location.reload(); };
-window.finalSubmit = () => { alert("Record Finalized. Thank you."); handleLogout(); };
+window.handleLogout = () => { auth.signOut(); location.reload(); };
+window.finalSubmit = () => { alert("Record Finalized. Thank you for your commitment to safety."); handleLogout(); };
