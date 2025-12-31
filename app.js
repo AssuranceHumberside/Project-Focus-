@@ -161,7 +161,19 @@ window.changeSection = async (dir) => {
     renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); 
 };
 
-window.finalSubmit = () => {
+window.finalSubmit = async () => {
+    // Persist a completion marker for admin reporting (does not affect existing behaviour)
+    try {
+        if (auth.currentUser) {
+            await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
+                status: "submitted",
+                submittedAt: new Date().toISOString()
+            }, { merge: true });
+        }
+    } catch (e) {
+        console.warn("Could not write submittedAt/status:", e);
+    }
+
     document.getElementById('audit-ui')?.classList.add('hidden');
     document.getElementById('thank-you-ui')?.classList.remove('hidden');
 };
@@ -173,24 +185,46 @@ window.handleForgotPassword = async () => {
 };
 
 window.toggleAuthMode = () => {
-    const isLogin = document.getElementById('auth-title')?.innerText === "VOLUNTEER PORTAL";
-    document.getElementById('auth-title').innerText = isLogin ? "JOIN PROJECT FOCUS" : "VOLUNTEER PORTAL";
-    document.getElementById('register-fields')?.classList.toggle('hidden');
-    document.getElementById('login-btn')?.classList.toggle('hidden');
-    document.getElementById('register-btn')?.classList.toggle('hidden');
+    const titleEl = document.getElementById('auth-title');
+    const toggleLink = document.getElementById('toggle-link');
+    if (!titleEl) return;
+
+    const isLogin = titleEl.innerText.trim().toLowerCase() === "volunteer portal";
+
+    titleEl.innerText = isLogin ? "JOIN PROJECT FOCUS" : "VOLUNTEER PORTAL";
+    document.getElementById('register-fields')?.classList.toggle('hidden', !isLogin);
+    document.getElementById('login-btn')?.classList.toggle('hidden', !isLogin);
+    document.getElementById('register-btn')?.classList.toggle('hidden', isLogin);
+
+    if (toggleLink) toggleLink.innerText = isLogin ? "Back to sign in" : "Register here";
 };
 
 window.handleRegister = async () => {
     const email = document.getElementById('email')?.value.trim();
+    const password = document.getElementById('password')?.value;
+
     const profile = {
-        email: email, name: document.getElementById('reg-name')?.value,
-        district: document.getElementById('reg-district')?.value, group: document.getElementById('reg-group')?.value,
+        email: email,
+        name: document.getElementById('reg-name')?.value?.trim(),
+        district: document.getElementById('reg-district')?.value,
+        section: document.getElementById('reg-section')?.value,
+        group: document.getElementById('reg-group')?.value?.trim(),
         isVerified: false
     };
+
+    // Light validation (improves data quality; does not affect existing accounts)
+    if (!email) return alert("Enter email.");
+    if (!password) return alert("Enter password.");
+    if (!profile.name) return alert("Enter full name.");
+    if (!profile.district) return alert("Select district.");
+    if (!profile.section) return alert("Select section.");
+    if (!profile.group) return alert("Enter group.");
+
     try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, document.getElementById('password').value);
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
         await setDoc(doc(db, "users", userCred.user.uid), profile);
-        alert("Registered! Pending Approval."); location.reload();
+        alert("Registered! Pending Approval.");
+        location.reload();
     } catch (e) { alert(e.message); }
 };
 

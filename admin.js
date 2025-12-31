@@ -64,18 +64,41 @@ async function loadAdminData() {
     renderGrid(); renderUserList();
 }
 
+function csvSafe(v) {
+    const s = (v ?? "").toString();
+    // Neutralise spreadsheet formula injection
+    const neutralised = /^[=+\-@]/.test(s) ? "'" + s : s;
+    // CSV escape quotes, always wrap
+    return `"${neutralised.replace(/"/g, '""')}"`;
+}
+
 window.exportToCSV = () => {
-    let csv = "data:text/csv;charset=utf-8,District,Group,Section,Auditor,Email,Question,Status,Action,Deadline\r\n";
+    let csv = "data:text/csv;charset=utf-8,District,Group,Section,Auditor,Email,Question,Status,Action,Deadline
+";
     allAuditData.forEach(audit => {
         const p = allUserProfiles.find(u => u.uid === audit.uid) || {};
         Object.entries(audit.responses || {}).forEach(([qId, val]) => {
-            csv += `${p.district},${p.group},${p.section},${p.name},${p.email},"${questionMap[qId]}",${val.status},"${val.explanation}",${val.deadline}\r\n`;
+            csv += [
+                csvSafe(p.district),
+                csvSafe(p.group),
+                csvSafe(p.section),
+                csvSafe(p.name),
+                csvSafe(p.email),
+                csvSafe(questionMap[qId] || qId),
+                csvSafe(val?.status),
+                csvSafe(val?.explanation),
+                csvSafe(val?.deadline)
+            ].join(",") + "
+";
         });
     });
+
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csv));
     link.setAttribute("download", "Project_Focus_Export.csv");
-    document.body.appendChild(link); link.click();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 };
 
 window.showDistrictDetails = (district) => {
