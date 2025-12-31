@@ -18,11 +18,7 @@
     <header class="scouts-teal text-white p-4 shadow-md">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <svg width="120" height="40" viewBox="0 0 541 161" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M540.2 79.5c0 43.9-35.6 79.5-79.5 79.5S381.2 123.4 381.2 79.5 416.8 0 460.7 0s79.5 35.6 79.5 79.5" fill="#fff"/>
-                    <path d="M460.7 148.9c-38.3 0-69.4-31.1-69.4-69.4s31.1-69.4 69.4-69.4 69.4 31.1 69.4 69.4-31.1 69.4-69.4 69.4" fill="#003945"/>
-                    <path d="M460.7 26.6c-29.2 0-52.9 23.7-52.9 52.9s23.7 52.9 52.9 52.9 52.9-23.7 52.9-52.9-23.7-52.9-52.9-52.9" fill="#fff"/>
-                </svg>
+                <img src="Humberside Logo.png" alt="Humberside Scouts Logo" class="h-12 w-auto bg-white p-1 rounded">
                 <h1 class="text-xl font-bold tracking-tight border-l pl-4 border-white/30">Project FOCUS</h1>
             </div>
             <button onclick="handleLogout()" class="text-xs bg-white/10 hover:bg-white/20 p-2 px-4 rounded transition-all">Logout & Save</button>
@@ -30,48 +26,39 @@
     </header>
 
     <div id="auth-ui" class="max-w-4xl mx-auto pt-10 px-4">
-        <div class="scouts-purple text-white p-8 rounded-t-xl">
+        <div class="scouts-purple text-white p-8 rounded-t-xl shadow-lg">
             <h2 class="text-3xl font-bold">Project FOCUS</h2>
-            <p class="opacity-90 italic">Fostering Ongoing Compliance and Understanding of Safety</p>
+            <p class="opacity-90 italic text-white">Fostering Ongoing Compliance and Understanding of Safety</p>
         </div>
         <div class="bg-white p-8 rounded-b-xl shadow-lg border-b-8 border-yellow-400 grid md:grid-cols-2 gap-8">
             <div class="text-sm space-y-4">
                 <p class="font-bold text-lg">Assuring our County</p>
                 <p>Safety is our core priority. Project FOCUS ensures every Section adheres to The Scouts' Policy Organisation and Rules (POR).</p>
-                <p class="italic text-slate-500">"Can you be sure that all Sections, Groups, and Districts that are run within the County are safe?"</p>
             </div>
             <div class="bg-slate-50 p-6 rounded border">
-                <input type="email" id="email" placeholder="Email" class="w-full border p-3 mb-3 rounded shadow-sm">
-                <input type="password" id="password" placeholder="Password" class="w-full border p-3 mb-4 rounded shadow-sm">
+                <input type="email" id="email" placeholder="Email" class="w-full border p-3 mb-3 rounded">
+                <input type="password" id="password" placeholder="Password" class="w-full border p-3 mb-4 rounded">
                 <button onclick="handleLogin()" class="w-full scouts-teal text-white py-3 rounded font-bold">Sign In</button>
             </div>
         </div>
     </div>
 
     <div id="audit-ui" class="hidden max-w-4xl mx-auto py-8 px-4 space-y-6">
-        <div class="flex flex-col gap-2">
-            <h2 id="section-title" class="text-2xl font-black text-slate-800 uppercase">Section 1: Basic Details</h2>
-            <div class="flex gap-2">
-                <div id="prog-1" class="h-2 flex-1 rounded-full bg-slate-200 transition-all"></div>
-                <div id="prog-2" class="h-2 flex-1 rounded-full bg-slate-200 transition-all"></div>
-                <div id="prog-3" class="h-2 flex-1 rounded-full bg-slate-200 transition-all"></div>
-                <div id="prog-4" class="h-2 flex-1 rounded-full bg-slate-200 transition-all"></div>
-                <div id="prog-5" class="h-2 flex-1 rounded-full bg-slate-200 transition-all"></div>
-            </div>
+        <h2 id="section-title" class="text-2xl font-black text-slate-800 uppercase">Section 1: Details</h2>
+        <div class="flex gap-2 mb-6">
+            <div id="prog-1" class="h-2 flex-1 rounded-full bg-slate-200"></div>
+            <div id="prog-2" class="h-2 flex-1 rounded-full bg-slate-200"></div>
+            <div id="prog-3" class="h-2 flex-1 rounded-full bg-slate-200"></div>
+            <div id="prog-4" class="h-2 flex-1 rounded-full bg-slate-200"></div>
+            <div id="prog-5" class="h-2 flex-1 rounded-full bg-slate-200"></div>
         </div>
 
         <div id="form-container" class="space-y-6"></div>
 
-        <div id="summary-view" class="hidden bg-white p-8 rounded-xl border-2 border-scouts-teal space-y-6">
-            <h3 class="text-xl font-bold border-b pb-2">Section Review</h3>
-            <div id="summary-content" class="space-y-4"></div>
-            <button onclick="confirmSection()" class="w-full scouts-teal text-white py-4 rounded font-bold">Everything is correct - Continue</button>
-        </div>
-
-        <div id="nav-controls" class="flex justify-between items-center pt-6">
-            <button id="prev-btn" onclick="changeSection(-1)" class="hidden text-slate-600 font-bold px-6 py-3 border rounded bg-white">Previous</button>
-            <button id="next-btn" onclick="showSummary()" class="ml-auto scouts-teal text-white px-8 py-3 rounded font-bold shadow-lg">Review Section</button>
-            <button id="submit-btn" onclick="finalSubmit()" class="hidden ml-auto scouts-purple text-white px-8 py-3 rounded font-bold shadow-lg">Finalize & Submit Record</button>
+        <div class="flex justify-between items-center pt-6">
+            <button id="prev-btn" onclick="changeSection(-1)" class="hidden text-slate-600 font-bold px-6 py-3 border rounded">Previous</button>
+            <button id="next-btn" onclick="changeSection(1)" class="ml-auto scouts-teal text-white px-8 py-3 rounded font-bold shadow-lg">Next Section</button>
+            <button id="submit-btn" onclick="finalSubmit()" class="hidden ml-auto scouts-purple text-white px-8 py-3 rounded font-bold shadow-lg">Finalize Submission</button>
         </div>
     </div>
 
