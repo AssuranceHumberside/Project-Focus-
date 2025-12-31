@@ -15,9 +15,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Initialize EmailJS
-emailjs.init("YOUR_PUBLIC_KEY");
-
 let currentStep = 0;
 let userProgress = {};
 let profileData = {};
@@ -39,7 +36,7 @@ const sections = [
         { id: "q14", text: "Is a robust InTouch process communicated for every meeting and trip?" },
         { id: "q_nightsaway", text: "For overnight events, is a Nights Away Permit holder always in charge?" },
         { id: "q_permits", text: "Are Adventurous Activity Permits checked and valid before high-risk activities?" },
-        { id: "q_gdpr", text: "Is personal data (medical forms/contact info) stored securely and disposed of correctly?" },
+        { id: "q_gdpr", text: "Is personal data stored securely and disposed of correctly?" },
         { id: "q_inclusion", text: "Are reasonable adjustments made to ensure the program is inclusive for all members?" }
     ]},
     { title: "Section Meetings", questions: [
@@ -71,35 +68,7 @@ const sections = [
     ]}
 ];
 
-window.handleLogin = async () => {
-    const email = document.getElementById('email').value.trim();
-    const pass = document.getElementById('password').value;
-    try {
-        const userCred = await signInWithEmailAndPassword(auth, email, pass);
-        const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
-        
-        if (!userSnap.exists() || !userSnap.data().isVerified) {
-            alert("Verification Pending. Please allow up to 48hrs.");
-            await signOut(auth);
-            return;
-        }
-
-        profileData = userSnap.data();
-        const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
-        if (recordSnap.exists()) {
-            const data = recordSnap.data();
-            userProgress = data.responses || {};
-            auditTrail = data.trail || {};
-            currentStep = data.lastStep || 0; // AUTO-RESUME
-        }
-        
-        document.getElementById('auth-ui').classList.add('hidden');
-        document.getElementById('audit-ui').classList.remove('hidden');
-        document.getElementById('logout-btn').classList.remove('hidden');
-        renderStep();
-    } catch (e) { alert("Login Error: " + e.message); }
-};
-
+// Attach functions to window to ensure HTML accessibility
 window.renderStep = () => {
     const section = sections[currentStep];
     const formContainer = document.getElementById('form-container');
@@ -132,7 +101,7 @@ window.renderStep = () => {
                     `).join('')}
                 </div>
                 <div class="${isIssue ? '' : 'hidden'} mt-6 pt-6 border-t border-slate-100 space-y-4">
-                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm outline-none font-medium">${saved.explanation || ''}</textarea>
+                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm outline-none">${saved.explanation || ''}</textarea>
                     <div class="flex items-center gap-4">
                         <span class="text-xs font-bold text-slate-500 uppercase text-[9px]">Target Date:</span>
                         <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border-none p-2 px-4 rounded-xl text-xs font-bold text-slate-600 outline-none">
@@ -150,17 +119,42 @@ window.renderStep = () => {
     document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 4);
 };
 
+window.handleLogin = async () => {
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value;
+    try {
+        const userCred = await signInWithEmailAndPassword(auth, email, pass);
+        const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
+        
+        if (!userSnap.exists() || !userSnap.data().isVerified) {
+            alert("Verification Pending.");
+            await signOut(auth);
+            return;
+        }
+
+        profileData = userSnap.data();
+        const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
+        if (recordSnap.exists()) {
+            const data = recordSnap.data();
+            userProgress = data.responses || {};
+            auditTrail = data.trail || {};
+            currentStep = data.lastStep || 0;
+        }
+        
+        document.getElementById('auth-ui').classList.add('hidden');
+        document.getElementById('audit-ui').classList.remove('hidden');
+        document.getElementById('logout-btn').classList.remove('hidden');
+        renderStep();
+    } catch (e) { alert("Login Error: " + e.message); }
+};
+
 window.saveField = async (id, value, type = 'status') => {
     if (!userProgress[id]) userProgress[id] = {};
-    
-    // Track Answer Changes (Original Trail)
     if (type === 'status' && value === 'Yes' && userProgress[id].status && userProgress[id].status !== 'Yes') {
         if (!auditTrail[id]) auditTrail[id] = [];
         auditTrail[id].push({ from: userProgress[id].status, to: 'Yes', date: new Date().toISOString() });
     }
-
     userProgress[id][type] = value;
-
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
         email: profileData.email,
         responses: userProgress,
@@ -169,19 +163,11 @@ window.saveField = async (id, value, type = 'status') => {
         lastStep: currentStep,
         lastUpdated: new Date().toISOString()
     }, { merge: true });
-    
     if (type === 'status') renderStep();
 };
 
-window.changeSection = async (dir) => { 
-    currentStep += dir; 
-    await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), { lastStep: currentStep }, { merge: true });
-    renderStep(); 
-    window.scrollTo({top: 0, behavior: 'smooth'}); 
-};
-
+window.changeSection = (dir) => { currentStep += dir; renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); };
 window.handleLogout = () => { signOut(auth); location.reload(); };
-
 window.toggleAuthMode = () => {
     const isLogin = document.getElementById('auth-title').innerText === "Volunteer Portal";
     document.getElementById('auth-title').innerText = isLogin ? "Join Project FOCUS" : "Volunteer Portal";
@@ -190,7 +176,6 @@ window.toggleAuthMode = () => {
     document.getElementById('register-btn').classList.toggle('hidden');
     document.getElementById('toggle-link').innerText = isLogin ? "Already have an account? Sign In" : "Need an account? Register here";
 };
-
 window.handleRegister = async () => {
     const email = document.getElementById('email').value.trim();
     const pass = document.getElementById('password').value;
@@ -203,12 +188,6 @@ window.handleRegister = async () => {
     try {
         const userCred = await createUserWithEmailAndPassword(auth, email, pass);
         await setDoc(doc(db, "users", userCred.user.uid), profile);
-        alert("Success! Awaiting verification.");
-        location.reload();
+        alert("Success! Awaiting verification."); location.reload();
     } catch (e) { alert(e.message); }
-};
-
-window.finalSubmit = async () => {
-    alert("Record Finalized. Email sent to your registered address.");
-    handleLogout();
 };
