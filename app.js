@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg",
     authDomain: "project-focus-2.firebaseapp.com",
@@ -19,9 +18,8 @@ const db = getFirestore(app);
 let currentStep = 0;
 let userProgress = {};
 let profileData = {};
-let auditTrail = {};
 
-// Full Statutory Question Database
+// Sections array with 35 questions...
 const sections = [
     { title: "People & Training", questions: [
         { id: "q_dbs", text: "Are all DBS, AAC, and Welcome Conversations complete for the team?" },
@@ -70,8 +68,6 @@ const sections = [
     ]}
 ];
 
-// --- AUTHENTICATION LOGIC ---
-
 window.handleLogin = async () => {
     const email = document.getElementById('email').value.trim();
     const pass = document.getElementById('password').value;
@@ -80,66 +76,25 @@ window.handleLogin = async () => {
         const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
         
         if (!userSnap.exists() || !userSnap.data().isVerified) {
-            alert("Verification Pending. Please check back soon.");
-            await signOut(auth);
-            return;
+            alert("Verification Pending."); await signOut(auth); return;
         }
 
         profileData = userSnap.data();
         const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
         if (recordSnap.exists()) {
             userProgress = recordSnap.data().responses || {};
-            auditTrail = recordSnap.data().trail || {};
-            currentStep = recordSnap.data().lastStep || 0; // Restore progress
+            currentStep = recordSnap.data().lastStep || 0;
         }
         
-        // UI Transition to Dashboard
+        // SUCCESS UI SWITCH
         document.getElementById('banner-section').classList.add('hidden');
-        document.getElementById('landing-page').classList.add('hidden');
-        document.getElementById('auth-ui').classList.add('hidden');
-        document.getElementById('county-alert').classList.add('hidden'); // Hide footer bar
+        document.getElementById('landing-page-content').classList.add('hidden');
+        document.getElementById('footer-alert').classList.add('hidden');
         
         document.getElementById('logout-btn').classList.remove('hidden');
         document.getElementById('landing-dashboard').classList.remove('hidden');
     } catch (e) { alert("Login Error: " + e.message); }
 };
-
-window.handleForgotPassword = async () => {
-    const email = document.getElementById('email').value.trim();
-    if (!email) return alert("Enter email first.");
-    try {
-        await sendPasswordResetEmail(auth, email);
-        alert("Reset link sent.");
-    } catch (e) { alert(e.message); }
-};
-
-window.toggleAuthMode = () => {
-    const isLogin = document.getElementById('auth-title').innerText === "VOLUNTEER PORTAL";
-    document.getElementById('auth-title').innerText = isLogin ? "JOIN PROJECT FOCUS" : "VOLUNTEER PORTAL";
-    document.getElementById('register-fields').classList.toggle('hidden');
-    document.getElementById('login-btn').classList.toggle('hidden');
-    document.getElementById('register-btn').classList.toggle('hidden');
-    document.getElementById('toggle-link').innerText = isLogin ? "Already have an account? Sign In" : "Need an account? Register here";
-};
-
-window.handleRegister = async () => {
-    const email = document.getElementById('email').value.trim();
-    const pass = document.getElementById('password').value;
-    const profile = {
-        email: email,
-        name: document.getElementById('reg-name').value,
-        district: document.getElementById('reg-district').value,
-        group: document.getElementById('reg-group').value,
-        isVerified: false
-    };
-    try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
-        await setDoc(doc(db, "users", userCred.user.uid), profile);
-        alert("Registered! Pending Approval."); location.reload();
-    } catch (e) { alert(e.message); }
-};
-
-// --- AUDIT FLOW LOGIC ---
 
 window.startAudit = () => {
     document.getElementById('landing-dashboard').classList.add('hidden');
@@ -152,20 +107,16 @@ window.renderStep = () => {
     const container = document.getElementById('form-container');
     document.getElementById('section-title').innerText = section.title;
     
-    // Update progress pills
     for(let i=1; i<=5; i++) {
-        const pill = document.getElementById(`prog-${i}`);
-        if(pill) pill.classList.toggle('progress-active', i <= currentStep + 1);
+        document.getElementById(`prog-${i}`)?.classList.toggle('progress-active', i <= currentStep + 1);
     }
 
     container.innerHTML = section.questions.map(q => {
         const saved = userProgress[q.id] || {};
-        const isMet = saved.status === 'Yes';
         const isIssue = saved.status === 'Partially' || saved.status === 'No';
-        
         return `
-            <div class="bg-white p-6 card-focus ${isMet ? 'met-card' : (saved.status ? 'action-card' : '')} mb-6 shadow-sm">
-                <p class="font-bold text-md text-slate-800 mb-4">${q.text}</p>
+            <div class="bg-white p-6 card-focus ${saved.status === 'Yes' ? 'met-card' : (saved.status ? 'action-card' : '')} mb-6">
+                <p class="font-bold text-slate-800 mb-4">${q.text}</p>
                 <div class="flex gap-6">
                     ${['Yes', 'Partially', 'No'].map(v => `
                         <label class="flex items-center gap-2 cursor-pointer font-black text-[9px] uppercase text-slate-400">
@@ -173,12 +124,9 @@ window.renderStep = () => {
                         </label>
                     `).join('')}
                 </div>
-                <div class="${isIssue ? '' : 'hidden'} mt-4 pt-4 border-t border-slate-100 space-y-4">
-                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border p-3 rounded-xl text-xs outline-none">${saved.explanation || ''}</textarea>
-                    <div class="flex items-center gap-4">
-                        <span class="text-[9px] font-bold text-slate-500 uppercase">Target Date:</span>
-                        <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border p-2 rounded-lg text-xs font-bold text-slate-600 outline-none">
-                    </div>
+                <div class="${isIssue ? '' : 'hidden'} mt-4 pt-4 border-t space-y-4">
+                    <textarea placeholder="Action Plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border p-3 rounded-xl text-xs">${saved.explanation || ''}</textarea>
+                    <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border p-2 text-xs">
                 </div>
             </div>`;
     }).join('');
@@ -190,43 +138,50 @@ window.renderStep = () => {
 
 window.saveField = async (id, value, type = 'status') => {
     if (!userProgress[id]) userProgress[id] = {};
-    
-    // History Tracking Log
-    if (type === 'status' && value === 'Yes' && userProgress[id].status && userProgress[id].status !== 'Yes') {
-        if (!auditTrail[id]) auditTrail[id] = [];
-        auditTrail[id].push({ from: userProgress[id].status, to: 'Yes', date: new Date().toISOString() });
-    }
-
     userProgress[id][type] = value;
-    
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
-        email: profileData.email,
-        responses: userProgress,
-        trail: auditTrail,
-        userDetails: profileData,
-        lastStep: currentStep,
-        lastUpdated: new Date().toISOString()
+        responses: userProgress, lastStep: currentStep, lastUpdated: new Date().toISOString()
     }, { merge: true });
-
     if (type === 'status') renderStep();
 };
 
 window.changeSection = async (dir) => { 
     currentStep += dir; 
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), { lastStep: currentStep }, { merge: true });
-    renderStep(); 
-    window.scrollTo({top: 0, behavior: 'smooth'}); 
+    renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); 
 };
 
 window.finalSubmit = () => {
     document.getElementById('audit-ui').classList.add('hidden');
     document.getElementById('thank-you-ui').classList.remove('hidden');
-    window.scrollTo({top: 0, behavior: 'smooth'});
 };
 
-window.backToDashboard = () => {
-    document.getElementById('thank-you-ui').classList.add('hidden');
-    document.getElementById('landing-dashboard').classList.remove('hidden');
+window.handleForgotPassword = async () => {
+    const email = document.getElementById('email').value.trim();
+    if (!email) return alert("Enter email.");
+    try { await sendPasswordResetEmail(auth, email); alert("Reset link sent."); } catch (e) { alert(e.message); }
+};
+
+window.toggleAuthMode = () => {
+    const isLogin = document.getElementById('auth-title').innerText === "VOLUNTEER PORTAL";
+    document.getElementById('auth-title').innerText = isLogin ? "JOIN PROJECT FOCUS" : "VOLUNTEER PORTAL";
+    document.getElementById('register-fields').classList.toggle('hidden');
+    document.getElementById('login-btn').classList.toggle('hidden');
+    document.getElementById('register-btn').classList.toggle('hidden');
+};
+
+window.handleRegister = async () => {
+    const email = document.getElementById('email').value.trim();
+    const profile = {
+        email: email, name: document.getElementById('reg-name').value,
+        district: document.getElementById('reg-district').value, group: document.getElementById('reg-group').value,
+        isVerified: false
+    };
+    try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, document.getElementById('password').value);
+        await setDoc(doc(db, "users", userCred.user.uid), profile);
+        alert("Registered! Pending Approval."); location.reload();
+    } catch (e) { alert(e.message); }
 };
 
 window.handleLogout = () => { signOut(auth); location.reload(); };
