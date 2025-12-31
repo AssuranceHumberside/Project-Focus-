@@ -13,7 +13,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Question Map to display full text in Admin 
+// Full Question Map for Context [cite: 10-49]
 const questionMap = {
     "q_dbs": "Can you confirm every leader and adult helper regularly attending has completed DBS, AAC, and Welcome Conversations?",
     "q_risk": "Is a written risk assessment produced for every activity, and is it shared with all adults involved?",
@@ -51,85 +51,65 @@ async function loadDashboard() {
         allData = querySnapshot.docs.map(doc => doc.data());
         renderGrid();
     } catch (e) {
-        alert("Error loading data. Ensure Firestore rules allow public read access.");
+        alert("Error loading data.");
     }
 }
 
 function renderGrid() {
-    const districts = [
-        "Beverley and Hornsea", "Blacktoft Beacon", "City of Hull", "County Section",
-        "Grimsby and Cleethorpes", "North Lincolnshire", "Pocklington", 
-        "South Holderness", "Wolds and Coast"
-    ];
+    const districts = ["Beverley and Hornsea", "Blacktoft Beacon", "City of Hull", "County Section", "Grimsby and Cleethorpes", "North Lincolnshire", "Pocklington", "South Holderness", "Wolds and Coast"];
     const grid = document.getElementById('district-grid');
     grid.innerHTML = districts.map(district => {
-        const districtAudits = allData.filter(a => a.details?.district === district);
-        const redFlags = districtAudits.filter(a => 
-            Object.values(a.responses || {}).some(r => r.status === "No" || r.status === "Partially")
-        ).length;
-
+        const districtAudits = allData.filter(a => a.responses?.district?.status === district);
+        const redFlags = districtAudits.filter(a => Object.values(a.responses || {}).some(r => r.status === "No" || r.status === "Partially")).length;
         return `
             <div onclick="showDistrictDetails('${district}')" class="cursor-pointer bg-white p-6 rounded-xl shadow border-b-4 transition-all hover:scale-105 ${redFlags > 0 ? 'border-red-500' : 'border-emerald-500'}">
                 <h3 class="font-bold text-lg text-[#003945]">${district}</h3>
-                <p class="text-sm text-slate-500 font-bold">${districtAudits.length} Completed Records</p>
-                <p class="text-sm font-bold mt-2 ${redFlags > 0 ? 'text-red-600' : 'text-emerald-600'}">
-                    ${redFlags} Sections with Actions
-                </p>
-            </div>
-        `;
+                <p class="text-sm text-slate-500 font-bold">${districtAudits.length} Records</p>
+                <p class="text-sm font-bold mt-2 ${redFlags > 0 ? 'text-red-600' : 'text-emerald-600'}">${redFlags} Actions Needed</p>
+            </div>`;
     }).join('');
 }
 
 window.showDistrictDetails = (district) => {
-    const districtAudits = allData.filter(a => a.details?.district === district);
+    const districtAudits = allData.filter(a => a.responses?.district?.status === district);
     document.getElementById('selected-district-name').innerText = `District: ${district}`;
     document.getElementById('response-view').classList.remove('hidden');
     
     const tbody = document.getElementById('response-table-body');
     tbody.innerHTML = districtAudits.map(a => {
         let issues = [];
-        const responses = a.responses || {};
+        const res = a.responses || {};
         
-        for (const [id, val] of Object.entries(responses)) {
+        for (const [id, val] of Object.entries(res)) {
             if (val.status === "No" || val.status === "Partially") {
-                const questionText = questionMap[id] || id.replace('q_', '').replace('_', ' ');
                 issues.push(`
-                    <div class="mb-4 p-4 bg-red-50 rounded border-l-4 border-red-600 shadow-sm">
-                        <div class="text-xs font-black text-red-900 uppercase mb-1 tracking-tight">Question Asked:</div>
-                        <div class="text-sm font-bold text-slate-800 mb-2 leading-tight">"${questionText}"</div>
-                        <div class="flex gap-2 mb-2">
-                             <span class="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded font-black uppercase">Status: ${val.status}</span>
-                             <span class="text-[10px] bg-slate-800 text-white px-2 py-0.5 rounded font-black uppercase">Target: ${val.deadline || 'TBC'}</span>
+                    <div class="mb-4 p-4 bg-red-50 rounded border-l-4 border-red-600">
+                        <div class="text-[10px] font-black text-red-900 uppercase">Requirement:</div>
+                        <div class="text-sm font-bold text-slate-800 mb-2">"${questionMap[id] || id}"</div>
+                        <div class="text-sm text-slate-700 bg-white p-2 rounded border border-red-100">
+                            <strong>Comment:</strong> ${val.explanation || 'None'} | <strong>Target:</strong> ${val.deadline || 'TBC'}
                         </div>
-                        <div class="text-sm text-slate-700 bg-white p-3 rounded border border-red-100">
-                            <strong class="text-xs uppercase block text-slate-500 mb-1">Auditor Comment:</strong>
-                            ${val.explanation || 'No reasoning provided.'}
-                        </div>
-                    </div>
-                `);
+                    </div>`);
             }
         }
 
         return `
-            <tr class="hover:bg-slate-50 transition-colors">
+            <tr class="hover:bg-slate-50">
                 <td class="p-6 align-top border-r w-1/3">
-                    <div class="font-black text-[#003945] text-lg uppercase leading-none mb-1">${a.details?.group || 'Unknown Group'}</div>
-                    <div class="text-sm font-bold text-slate-500 mb-4">${a.details?.section_type || 'Section TBC'}</div>
+                    <div class="font-black text-[#003945] text-lg uppercase leading-tight mb-1">${res.group?.status || 'Unknown Group'}</div>
+                    <div class="text-md font-bold text-purple-700 mb-4 bg-purple-50 px-2 py-1 rounded inline-block">${res.section_type?.status || 'Unknown Section'}</div>
                     <div class="pt-4 border-t border-slate-100">
-                        <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Auditor</span>
-                        <div class="text-sm font-black text-slate-800">${a.details?.name || 'Unknown'}</div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Auditor Name</span>
+                        <div class="text-sm font-black text-slate-800">${res.name?.status || 'Unknown'}</div>
                     </div>
                 </td>
                 <td class="p-6 align-top">
-                    ${issues.length > 0 ? issues.join('') : '<div class="text-emerald-600 font-bold italic">✓ Fully Assured (No Actions)</div>'}
+                    ${issues.length > 0 ? issues.join('') : '<div class="text-emerald-600 font-bold italic">✓ Fully Assured</div>'}
                 </td>
-            </tr>
-        `;
+            </tr>`;
     }).join('');
-    
     window.scrollTo({ top: document.getElementById('response-view').offsetTop - 20, behavior: 'smooth' });
 };
 
 window.closeDetails = () => document.getElementById('response-view').classList.add('hidden');
-
 loadDashboard();
