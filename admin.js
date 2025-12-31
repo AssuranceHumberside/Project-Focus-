@@ -33,19 +33,18 @@ const questionMap = {
     "q43": "Is safety a standard talking point in post-activity reviews?"
 };
 
-// Handle Admin Login
+// Admin Login Logic
 window.handleAdminLogin = async () => {
     const email = document.getElementById('admin-email').value;
     const pass = document.getElementById('admin-password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-        // UI changes happen automatically via onAuthStateChanged below
     } catch (e) { 
-        alert("Login Failed: Please ensure you are using an authorized SME account. For issues, contact assurance@humbersidescouts.org.uk"); 
+        alert("Login Denied: Use an authorized SME account. Questions? Contact assurance@humbersidescouts.org.uk"); 
     }
 };
 
-// Listen for Auth State to secure the dashboard
+// Monitor Auth State for Posh Dashboard Unlock
 onAuthStateChanged(auth, (user) => {
     if (user && user.email === 'tom.harrison@humbersidescouts.org.uk') {
         document.getElementById('admin-auth-ui').classList.add('hidden');
@@ -57,7 +56,6 @@ onAuthStateChanged(auth, (user) => {
 
 async function loadAdminData() {
     try {
-        // Fetch both collections simultaneously
         const [auditSnap, userSnap] = await Promise.all([
             getDocs(collection(db, "project_focus_records")),
             getDocs(collection(db, "users"))
@@ -69,8 +67,8 @@ async function loadAdminData() {
         renderGrid();
         renderUserList();
     } catch (err) { 
-        console.error(err);
-        alert("Error loading data. Please check your internet connection."); 
+        console.error("Data Sync Error:", err);
+        alert("Database connection failed. Ensure rules allow SME access."); 
     }
 }
 
@@ -79,7 +77,6 @@ function renderGrid() {
     const grid = document.getElementById('district-grid');
     
     grid.innerHTML = districts.map(district => {
-        // Cross-reference audit records with user profiles to find the district
         const districtAudits = allAuditData.filter(audit => {
             const profile = allUserProfiles.find(u => u.uid === audit.uid);
             return profile && profile.district === district;
@@ -92,7 +89,7 @@ function renderGrid() {
         return `
             <div onclick="showDistrictDetails('${district}')" class="cursor-pointer bg-white p-8 rounded-[2rem] shadow-xl border-b-8 transition-all hover:scale-[1.03] ${redFlags > 0 ? 'border-red-500 shadow-red-100' : 'border-emerald-500 shadow-emerald-50'}">
                 <h3 class="font-black text-xl text-[#003945] uppercase italic tracking-tighter mb-1">${district}</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${districtAudits.length} Active Audits</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${districtAudits.length} Units Audited</p>
                 <div class="mt-6 flex justify-between items-end">
                     <span class="text-2xl font-black ${redFlags > 0 ? 'text-red-600' : 'text-emerald-600'}">${redFlags}</span>
                     <span class="text-[9px] font-black uppercase text-slate-400 pb-1 italic">Action Needed</span>
@@ -133,10 +130,10 @@ window.showDistrictDetails = (district) => {
         return `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-10 align-top border-r w-1/3">
-                    <div class="font-black text-[#003945] text-2xl uppercase leading-none mb-2 tracking-tighter italic">${profile.group || 'Unknown Group'}</div>
-                    <div class="text-[11px] font-black text-purple-700 bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-8 border border-purple-100">${profile.section || 'Unknown Section'}</div>
+                    <div class="font-black text-[#003945] text-2xl uppercase leading-none mb-2 tracking-tighter italic">${profile.group || 'N/A'}</div>
+                    <div class="text-[11px] font-black text-purple-700 bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-4 border border-purple-100">${profile.section || 'N/A'}</div>
                     <div class="pt-6 border-t border-slate-100">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Auditor</span>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 underline decoration-teal-500">${profile.email || 'Email Not Recorded'}</span>
                         <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${profile.name || 'Anonymous'}</div>
                     </div>
                 </td>
@@ -153,7 +150,7 @@ window.renderUserList = () => {
     tbody.innerHTML = pending.length ? pending.map(u => `
         <tr class="hover:bg-slate-50 transition-all">
             <td class="p-6">
-                <div class="font-bold text-[#003945] mb-1">${u.email}</div>
+                <div class="font-bold text-[#003945] mb-1 underline decoration-yellow-400">${u.email || 'Missing Email'}</div>
                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">${new Date(u.createdAt).toLocaleDateString()}</div>
             </td>
             <td class="p-6">
@@ -170,9 +167,9 @@ window.verifyUser = async (uid) => {
     try {
         const userRef = doc(db, "users", uid);
         await updateDoc(userRef, { isVerified: true });
-        alert("Verification successful. The auditor can now log in.");
+        alert("Success: Auditor can now log in.");
         await loadAdminData();
-    } catch (e) { alert("Error approving user."); }
+    } catch (e) { alert("Error approving user: Check database connection."); }
 };
 
 window.switchTab = (tab) => {
