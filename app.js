@@ -68,13 +68,8 @@ const sections = [
 ];
 
 window.handleLogin = async () => {
-    const emailInput = document.getElementById('email');
-    const passInput = document.getElementById('password');
-    if (!emailInput || !passInput) return;
-
-    const email = emailInput.value.trim();
-    const pass = passInput.value;
-
+    const email = document.getElementById('email')?.value.trim();
+    const pass = document.getElementById('password')?.value;
     try {
         const userCred = await signInWithEmailAndPassword(auth, email, pass);
         const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
@@ -92,11 +87,10 @@ window.handleLogin = async () => {
             currentStep = recordSnap.data().lastStep || 0;
         }
         
-        // SUCCESS UI SWITCH WITH NULL CHECKS
+        // Defensive UI Switch
         document.getElementById('banner-section')?.classList.add('hidden');
         document.getElementById('landing-page-content')?.classList.add('hidden');
         document.getElementById('footer-alert')?.classList.add('hidden');
-        
         document.getElementById('logout-btn')?.classList.remove('hidden');
         document.getElementById('landing-dashboard')?.classList.remove('hidden');
     } catch (e) { alert("Login Error: " + e.message); }
@@ -111,8 +105,6 @@ window.startAudit = () => {
 window.renderStep = () => {
     const section = sections[currentStep];
     const container = document.getElementById('form-container');
-    if (!section || !container) return;
-
     document.getElementById('section-title').innerText = section.title;
     
     for(let i=1; i<=5; i++) {
@@ -148,83 +140,58 @@ window.saveField = async (id, value, type = 'status') => {
     if (!userProgress[id]) userProgress[id] = {};
     userProgress[id][type] = value;
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
-        responses: userProgress, lastStep: currentStep, lastUpdated: new Date().toISOString()
+        responses: userProgress,
+        lastStep: currentStep,
+        lastUpdated: new Date().toISOString()
     }, { merge: true });
     if (type === 'status') renderStep();
 };
 
 window.changeSection = async (dir) => { 
     currentStep += dir; 
-    if (auth.currentUser) {
-        await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), { lastStep: currentStep }, { merge: true });
-    }
-    renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); 
+    await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), { lastStep: currentStep }, { merge: true });
+    renderStep(); 
+    window.scrollTo({top: 0, behavior: 'smooth'}); 
 };
 
-window.finalSubmit = async () => {
-    // Persist a completion marker for admin reporting (does not affect existing behaviour)
-    try {
-        if (auth.currentUser) {
-            await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
-                status: "submitted",
-                submittedAt: new Date().toISOString()
-            }, { merge: true });
-        }
-    } catch (e) {
-        console.warn("Could not write submittedAt/status:", e);
-    }
-
+window.finalSubmit = () => {
     document.getElementById('audit-ui')?.classList.add('hidden');
     document.getElementById('thank-you-ui')?.classList.remove('hidden');
 };
 
 window.handleForgotPassword = async () => {
     const email = document.getElementById('email')?.value.trim();
-    if (!email) return alert("Enter email.");
-    try { await sendPasswordResetEmail(auth, email); alert("Reset link sent."); } catch (e) { alert(e.message); }
+    if (!email) return alert("Enter email address.");
+    try {
+        await sendPasswordResetEmail(auth, email);
+        alert("Reset link sent.");
+    } catch (e) { alert(e.message); }
 };
 
 window.toggleAuthMode = () => {
-    const titleEl = document.getElementById('auth-title');
-    const toggleLink = document.getElementById('toggle-link');
-    if (!titleEl) return;
-
-    const isLogin = titleEl.innerText.trim().toLowerCase() === "volunteer portal";
-
-    titleEl.innerText = isLogin ? "JOIN PROJECT FOCUS" : "VOLUNTEER PORTAL";
-    document.getElementById('register-fields')?.classList.toggle('hidden', !isLogin);
-    document.getElementById('login-btn')?.classList.toggle('hidden', !isLogin);
-    document.getElementById('register-btn')?.classList.toggle('hidden', isLogin);
-
-    if (toggleLink) toggleLink.innerText = isLogin ? "Back to sign in" : "Register here";
+    const title = document.getElementById('auth-title');
+    const isLogin = title.innerText.toLowerCase().includes("portal");
+    title.innerText = isLogin ? "JOIN PROJECT FOCUS" : "VOLUNTEER PORTAL";
+    document.getElementById('register-fields')?.classList.toggle('hidden');
+    document.getElementById('login-btn')?.classList.toggle('hidden');
+    document.getElementById('register-btn')?.classList.toggle('hidden');
 };
 
 window.handleRegister = async () => {
     const email = document.getElementById('email')?.value.trim();
-    const password = document.getElementById('password')?.value;
-
+    const pass = document.getElementById('password')?.value;
     const profile = {
-        email: email,
-        name: document.getElementById('reg-name')?.value?.trim(),
+        email: email, name: document.getElementById('reg-name')?.value,
         district: document.getElementById('reg-district')?.value,
         section: document.getElementById('reg-section')?.value,
-        group: document.getElementById('reg-group')?.value?.trim(),
+        group: document.getElementById('reg-group')?.value,
         isVerified: false
     };
-
-    // Light validation (improves data quality; does not affect existing accounts)
-    if (!email) return alert("Enter email.");
-    if (!password) return alert("Enter password.");
-    if (!profile.name) return alert("Enter full name.");
-    if (!profile.district) return alert("Select district.");
-    if (!profile.section) return alert("Select section.");
-    if (!profile.group) return alert("Enter group.");
-
+    if (!profile.name || !profile.district || !profile.section) return alert("All fields required.");
     try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
         await setDoc(doc(db, "users", userCred.user.uid), profile);
-        alert("Registered! Pending Approval.");
-        location.reload();
+        alert("Success! Pending SME verification."); location.reload();
     } catch (e) { alert(e.message); }
 };
 
