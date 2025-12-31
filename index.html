@@ -1,11 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project FOCUS - Humberside Scouts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --scout-teal: #003945; --scout-purple: #7413dc; --scout-yellow: #ffe627; }
+        body { font-family: 'Nunito Sans', sans-serif; background-color: #f8fafc; }
+        .scout-gradient { background: linear-gradient(135deg, var(--scout-teal) 0%, #001a20 100%); }
+        .hidden { display: none !important; }
+        .card-focus { border-left: 6px solid #cbd5e1; transition: all 0.2s; background: white; border-radius: 1.5rem; }
+        .met-card { border-left-color: var(--scout-teal); background: #f1f5f9; }
+        .action-card { border-left-color: #ed3f23; }
+        .progress-pill { height: 6px; border-radius: 99px; background: #e2e8f0; transition: all 0.4s ease; }
+        .progress-active { background: var(--scout-teal); box-shadow: 0 0 10px rgba(0, 57, 69, 0.3); }
+    </style>
+</head>
 <body class="text-slate-800">
     <header class="scout-gradient text-white sticky top-0 z-50 shadow-xl">
         <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center text-white">
             <div class="flex items-center gap-5">
                 <img src="Humberside Logo.png" alt="Humberside Scouts" class="h-10 w-auto bg-white p-1 rounded shadow-sm">
-                <h1 class="text-xl font-black uppercase italic tracking-tight">Project FOCUS</h1>
+                <h1 class="text-xl font-black uppercase italic tracking-tight text-white">Project FOCUS</h1>
             </div>
-            <button id="logout-btn" onclick="handleLogout()" class="hidden text-[10px] font-black border border-white/30 px-5 py-2 rounded-full uppercase tracking-widest hover:bg-white hover:text-teal-900 transition-all">Logout</button>
+            <button id="logout-btn" onclick="handleLogout()" class="hidden text-[10px] font-black border border-white/30 px-5 py-2 rounded-full uppercase tracking-widest hover:bg-white hover:text-teal-900 transition-all text-white">Logout</button>
         </div>
     </header>
 
@@ -16,19 +36,36 @@
     <main class="max-w-5xl mx-auto px-6 py-12">
         <div id="auth-ui" class="max-w-xl mx-auto">
             <h2 id="auth-title" class="text-4xl font-black text-[#003945] mb-2 leading-tight">Volunteer Portal</h2>
-            <p class="text-slate-500 mb-8 font-medium">Fostering Ongoing Compliance and Understanding of Safety.</p>
+            <p class="text-slate-500 mb-8 font-medium italic">Fostering Ongoing Compliance and Understanding of Safety.</p>
             <div id="auth-card" class="bg-white p-8 rounded-[2rem] shadow-2xl border border-slate-100 space-y-4">
                 <input type="email" id="email" placeholder="Email Address" class="w-full px-6 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-teal-700">
                 <input type="password" id="password" placeholder="Password" class="w-full px-6 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-teal-700">
-                <button id="login-btn" onclick="handleLogin()" class="w-full scout-gradient text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg">Sign In</button>
-                <div class="mt-4 text-center"><button onclick="handleForgotPassword()" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#003945]">Forgot Password?</button></div>
+                
+                <div id="register-fields" class="hidden space-y-4 pt-4 border-t border-slate-100">
+                    <input type="text" id="reg-name" placeholder="Full Name" class="w-full px-6 py-4 bg-slate-50 rounded-2xl border outline-none">
+                    <select id="reg-district" class="w-full px-6 py-4 bg-slate-50 rounded-2xl border outline-none font-bold text-slate-500">
+                        <option value="" disabled selected>Select District...</option>
+                        <option>Beverley and Hornsea</option><option>Blacktoft Beacon</option><option>City of Hull</option>
+                        <option>County Section</option><option>Grimsby and Cleethorpes</option><option>North Lincolnshire</option>
+                        <option>Pocklington</option><option>South Holderness</option><option>Wolds and Coast</option>
+                    </select>
+                    <input type="text" id="reg-group" placeholder="Scout Group" class="w-full px-6 py-4 bg-slate-50 rounded-2xl border outline-none">
+                    <input type="text" id="reg-section" placeholder="Section" class="w-full px-6 py-4 bg-slate-50 rounded-2xl border outline-none">
+                </div>
+
+                <button id="login-btn" onclick="handleLogin()" class="w-full scout-gradient text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg text-white">Sign In</button>
+                <button id="register-btn" onclick="handleRegister()" class="hidden w-full bg-[#7413dc] text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg text-white">Create Account</button>
+                
+                <div class="mt-4 text-center">
+                    <button onclick="handleForgotPassword()" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#003945]">Forgot Password?</button>
+                </div>
                 <div class="mt-8 pt-6 border-t border-slate-100 text-center">
                     <button onclick="toggleAuthMode()" id="toggle-link" class="text-xs font-black uppercase tracking-widest text-[#003945] hover:underline">Need an account? Register here</button>
                 </div>
             </div>
         </div>
 
-        <div id="landing-dashboard" class="hidden animate-fade-in">
+        <div id="landing-dashboard" class="hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 <div class="bg-[#ffe627] p-10 rounded-[2.5rem] shadow-xl border-b-8 border-yellow-500">
                     <h2 class="text-3xl font-black text-[#003945] mb-4 uppercase italic">Why do we need to do this?</h2>
@@ -41,10 +78,10 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div onclick="startAudit()" class="cursor-pointer bg-white p-8 rounded-[2rem] shadow-lg border-b-8 border-teal-600 hover:scale-[1.03] transition-all">
+                <div onclick="startAudit()" class="cursor-pointer bg-white p-8 rounded-[2rem] shadow-lg border-b-8 border-teal-600 hover:scale-[1.03] transition-all group">
                     <h3 class="font-black text-[#003945] uppercase italic text-xl mb-2">Section Audit</h3>
                     <p class="text-xs text-slate-400 font-bold uppercase mb-4">35 Statutory Points</p>
-                    <span class="scout-gradient text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Enter Audit</span>
+                    <span class="scout-gradient text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white group-hover:opacity-80">Enter Audit</span>
                 </div>
                 <div class="opacity-50 grayscale bg-white p-8 rounded-[2rem] shadow-lg border-b-8 border-slate-300">
                     <h3 class="font-black text-slate-400 uppercase italic text-xl mb-2">Campsite Audit</h3>
@@ -58,16 +95,29 @@
         </div>
 
         <div id="audit-ui" class="hidden max-w-xl mx-auto">
+            <div id="progress-container" class="flex gap-2 mb-12">
+                <div id="prog-1" class="progress-pill flex-1"></div>
+                <div id="prog-2" class="progress-pill flex-1"></div>
+                <div id="prog-3" class="progress-pill flex-1"></div>
+                <div id="prog-4" class="progress-pill flex-1"></div>
+                <div id="prog-5" class="progress-pill flex-1"></div>
+            </div>
             <h2 id="section-title" class="text-3xl font-black text-[#003945] uppercase italic mb-8"></h2>
             <div id="form-container" class="space-y-6"></div>
+            <div class="flex justify-between items-center pt-10 border-t border-slate-100 mt-10">
+                <button id="prev-btn" onclick="changeSection(-1)" class="hidden text-slate-400 font-black uppercase text-xs">Previous</button>
+                <button id="next-btn" onclick="changeSection(1)" class="ml-auto scout-gradient text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest shadow-md text-white">Next Section</button>
+                <button id="submit-btn" onclick="finalSubmit()" class="hidden ml-auto bg-[#7413dc] text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl text-white">Finish Audit</button>
             </div>
+        </div>
 
-        <div id="thank-you-ui" class="hidden max-w-xl mx-auto text-center py-20">
+        <div id="thank-you-ui" class="hidden text-center py-20 max-w-xl mx-auto">
             <div class="text-emerald-600 mb-8"><svg class="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-            <h2 class="text-4xl font-black text-[#003945] uppercase italic mb-4 tracking-tighter">Assurance Logged</h2>
-            <p class="text-slate-600 font-medium mb-10 leading-relaxed text-lg">Thank you for your commitment to safety. Your section responses have been saved and shared with your District SME team.</p>
-            <button onclick="backToDashboard()" class="scout-gradient text-white px-10 py-4 rounded-full font-black uppercase tracking-widest text-xs shadow-xl">Return to Dashboard</button>
+            <h2 class="text-4xl font-black text-[#003945] uppercase italic mb-4 tracking-tighter">Audit Logged</h2>
+            <p class="text-slate-600 font-medium mb-10 leading-relaxed">Thank you for your commitment to safety. Your section responses have been saved.</p>
+            <button onclick="backToDashboard()" class="scout-gradient text-white px-10 py-4 rounded-full font-black uppercase tracking-widest text-xs shadow-xl text-white">Back to Dashboard</button>
         </div>
     </main>
     <script type="module" src="app.js"></script>
 </body>
+</html>
