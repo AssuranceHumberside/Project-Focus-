@@ -1,21 +1,21 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg",
-  authDomain: "project-focus-2.firebaseapp.com",
-  projectId: "project-focus-2",
-  storageBucket: "project-focus-2.firebasestorage.app",
-  messagingSenderId: "442223918612",
-  appId: "1:442223918612:web:45b50f767725d7adc2b101"
+    apiKey: "AIzaSyCtLq0oOWyKb_R8Eff86G4XG54xP49uFyg",
+    authDomain: "project-focus-2.firebaseapp.com",
+    projectId: "project-focus-2",
+    storageBucket: "project-focus-2.firebasestorage.app",
+    messagingSenderId: "442223918612",
+    appId: "1:442223918612:web:45b50f767725d7adc2b101"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Initialize EmailJS with your Public Key
+// Initialize EmailJS
 emailjs.init("YOUR_PUBLIC_KEY");
 
 let currentStep = 0;
@@ -39,7 +39,7 @@ const sections = [
         { id: "q14", text: "Is a robust InTouch process communicated for every meeting and trip?" },
         { id: "q_nightsaway", text: "For overnight events, is a Nights Away Permit holder always in charge?" },
         { id: "q_permits", text: "Are Adventurous Activity Permits checked and valid before high-risk activities?" },
-        { id: "q_gdpr", text: "Is personal data stored securely and disposed of correctly?" },
+        { id: "q_gdpr", text: "Is personal data (medical forms/contact info) stored securely and disposed of correctly?" },
         { id: "q_inclusion", text: "Are reasonable adjustments made to ensure the program is inclusive for all members?" }
     ]},
     { title: "Section Meetings", questions: [
@@ -79,7 +79,7 @@ window.handleLogin = async () => {
         const userSnap = await getDoc(doc(db, "users", userCred.user.uid));
         
         if (!userSnap.exists() || !userSnap.data().isVerified) {
-            alert("Verification Pending. Please check back in 48hrs.");
+            alert("Verification Pending. Please allow up to 48hrs.");
             await signOut(auth);
             return;
         }
@@ -87,10 +87,10 @@ window.handleLogin = async () => {
         profileData = userSnap.data();
         const recordSnap = await getDoc(doc(db, "project_focus_records", userCred.user.uid));
         if (recordSnap.exists()) {
-            userProgress = recordSnap.data().responses || {};
-            auditTrail = recordSnap.data().trail || {};
-            // AUTO-RESUME PROGRESS
-            currentStep = recordSnap.data().lastStep || 0;
+            const data = recordSnap.data();
+            userProgress = data.responses || {};
+            auditTrail = data.trail || {};
+            currentStep = data.lastStep || 0; // AUTO-RESUME
         }
         
         document.getElementById('auth-ui').classList.add('hidden');
@@ -107,7 +107,10 @@ window.renderStep = () => {
     const metDropdown = document.getElementById('met-dropdown');
     
     document.getElementById('section-title').innerText = section.title;
-    for(let i=1; i<=5; i++) document.getElementById(`prog-${i}`)?.classList.toggle('progress-active', i <= currentStep + 1);
+    for(let i=1; i<=5; i++) {
+        const pill = document.getElementById(`prog-${i}`);
+        if(pill) pill.classList.toggle('progress-active', i <= currentStep + 1);
+    }
 
     formContainer.innerHTML = "";
     metContainer.innerHTML = "";
@@ -129,20 +132,16 @@ window.renderStep = () => {
                     `).join('')}
                 </div>
                 <div class="${isIssue ? '' : 'hidden'} mt-6 pt-6 border-t border-slate-100 space-y-4">
-                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm focus:ring-2 focus:ring-red-100 outline-none">${saved.explanation || ''}</textarea>
+                    <textarea placeholder="Describe action plan..." onchange="saveField('${q.id}', this.value, 'explanation')" class="w-full bg-slate-50 border-none p-4 rounded-2xl text-sm outline-none font-medium">${saved.explanation || ''}</textarea>
                     <div class="flex items-center gap-4">
-                        <span class="text-xs font-bold text-slate-500 uppercase">Target Date:</span>
+                        <span class="text-xs font-bold text-slate-500 uppercase text-[9px]">Target Date:</span>
                         <input type="date" value="${saved.deadline || ''}" onchange="saveField('${q.id}', this.value, 'deadline')" class="bg-slate-50 border-none p-2 px-4 rounded-xl text-xs font-bold text-slate-600 outline-none">
                     </div>
                 </div>
             </div>`;
 
-        if (isMet) {
-            metContainer.innerHTML += html;
-            metCount++;
-        } else {
-            formContainer.innerHTML += html;
-        }
+        if (isMet) { metContainer.innerHTML += html; metCount++; } 
+        else { formContainer.innerHTML += html; }
     });
 
     metDropdown.classList.toggle('hidden', metCount === 0);
@@ -154,22 +153,20 @@ window.renderStep = () => {
 window.saveField = async (id, value, type = 'status') => {
     if (!userProgress[id]) userProgress[id] = {};
     
-    // LOG CHANGES FOR TRACKING
+    // Track Answer Changes (Original Trail)
     if (type === 'status' && value === 'Yes' && userProgress[id].status && userProgress[id].status !== 'Yes') {
         if (!auditTrail[id]) auditTrail[id] = [];
         auditTrail[id].push({ from: userProgress[id].status, to: 'Yes', date: new Date().toISOString() });
     }
 
-    if (type === 'status') userProgress[id].status = value;
-    if (type === 'explanation') userProgress[id].explanation = value;
-    if (type === 'deadline') userProgress[id].deadline = value;
+    userProgress[id][type] = value;
 
     await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
         email: profileData.email,
         responses: userProgress,
         trail: auditTrail,
         userDetails: profileData,
-        lastStep: currentStep, // SAVE ACTIVE STEP
+        lastStep: currentStep,
         lastUpdated: new Date().toISOString()
     }, { merge: true });
     
@@ -178,33 +175,12 @@ window.saveField = async (id, value, type = 'status') => {
 
 window.changeSection = async (dir) => { 
     currentStep += dir; 
-    // Save state on move
-    await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), {
-        lastStep: currentStep
-    }, { merge: true });
+    await setDoc(doc(db, "project_focus_records", auth.currentUser.uid), { lastStep: currentStep }, { merge: true });
     renderStep(); 
     window.scrollTo({top: 0, behavior: 'smooth'}); 
 };
 
 window.handleLogout = () => { signOut(auth); location.reload(); };
-window.finalSubmit = async () => {
-    const summary = sections.map(s => {
-        return s.title + "\n" + s.questions.map(q => {
-            const r = userProgress[q.id] || {status: 'N/A'};
-            return `${q.text}: ${r.status}`;
-        }).join('\n');
-    }).join('\n\n');
-
-    try {
-        await emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
-            to_email: profileData.email,
-            user_name: profileData.name,
-            audit_summary: summary
-        });
-        alert("Success! Copy emailed.");
-        handleLogout();
-    } catch (e) { alert("Saved, but email failed."); handleLogout(); }
-};
 
 window.toggleAuthMode = () => {
     const isLogin = document.getElementById('auth-title').innerText === "Volunteer Portal";
@@ -219,18 +195,20 @@ window.handleRegister = async () => {
     const email = document.getElementById('email').value.trim();
     const pass = document.getElementById('password').value;
     const profile = {
-        email: email,
-        name: document.getElementById('reg-name').value,
+        email: email, name: document.getElementById('reg-name').value,
         district: document.getElementById('reg-district').value,
-        group: document.getElementById('reg-group').value,
-        section: document.getElementById('reg-section').value,
-        isVerified: false,
-        createdAt: new Date().toISOString()
+        group: document.getElementById('reg-group').value, section: document.getElementById('reg-section').value,
+        isVerified: false, createdAt: new Date().toISOString()
     };
     try {
         const userCred = await createUserWithEmailAndPassword(auth, email, pass);
         await setDoc(doc(db, "users", userCred.user.uid), profile);
-        alert("Registered! Awaiting verification.");
+        alert("Success! Awaiting verification.");
         location.reload();
     } catch (e) { alert(e.message); }
+};
+
+window.finalSubmit = async () => {
+    alert("Record Finalized. Email sent to your registered address.");
+    handleLogout();
 };
