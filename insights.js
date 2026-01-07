@@ -14,12 +14,12 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const questionMap = {
-    "q_dbs": "DBS & Training", "q_training": "Mandatory Training", "q_firstaid": "First Aid",
+    "q_dbs": "DBS Checks", "q_training": "Mandatory Training", "q_firstaid": "First Aid",
     "q_risk": "Risk Assessments", "q_approval": "Activity Approval", "q14": "InTouch",
-    "q_gdpr": "Data/GDPR", "q_fire": "Fire Safety", "q31": "First Aid Kits"
+    "q_gdpr": "GDPR Compliance", "q_fire": "Fire Safety", "q31": "First Aid Kits"
 };
 
-async function loadInsights() {
+async function generateGraphics() {
     const [auditSnap, userSnap] = await Promise.all([
         getDocs(collection(db, "project_focus_records")),
         getDocs(collection(db, "users"))
@@ -28,65 +28,61 @@ async function loadInsights() {
     const audits = auditSnap.docs.map(d => d.data());
     const users = userSnap.docs.map(d => d.data());
 
-    // 1. Calculate Summary Stats
-    let totalRedFlags = 0;
-    let totalQuestions = 0;
-    let yesAnswers = 0;
-    const riskData = {};
-    const districtData = {};
+    let redFlags = 0;
+    let totalQs = 0;
+    let yesCount = 0;
+    const riskCounts = {};
+    const districtCounts = {};
 
-    audits.forEach(a => {
-        Object.entries(a.responses || {}).forEach(([qId, val]) => {
-            totalQuestions++;
-            if (val.status === "Yes") yesAnswers++;
+    audits.forEach(audit => {
+        Object.entries(audit.responses || {}).forEach(([qId, val]) => {
+            totalQs++;
+            if (val.status === "Yes") yesCount++;
             else {
-                totalRedFlags++;
+                redFlags++;
                 const label = questionMap[qId] || "Other";
-                riskData[label] = (riskData[label] || 0) + 1;
+                riskCounts[label] = (riskCounts[label] || 0) + 1;
             }
         });
 
-        const profile = users.find(u => u.email === a.email) || a.userDetails || {};
-        const district = profile.district || "Unknown";
-        districtData[district] = (districtData[district] || 0) + 1;
+        // Match user for district data
+        const profile = users.find(u => u.email === audit.email) || audit.userDetails || {};
+        const district = profile.district || "Unassigned";
+        districtCounts[district] = (districtCounts[district] || 0) + 1;
     });
 
-    // 2. Update UI Stats
-    document.getElementById('stat-total-audits').innerText = audits.length;
-    document.getElementById('stat-red-flags').innerText = totalRedFlags;
-    document.getElementById('stat-compliance').innerText = 
-        totalQuestions > 0 ? Math.round((yesAnswers / totalQuestions) * 100) + "%" : "0%";
+    // Update Numerical Stats
+    document.getElementById('audit-count').innerText = audits.length;
+    document.getElementById('total-issues').innerText = redFlags;
+    document.getElementById('county-compliance').innerText = Math.round((yesCount / totalQs) * 100) + "%";
 
-    // 3. Render Bar Chart (Safety Risks)
-    new Chart(document.getElementById('riskChart'), {
+    // Build Risk Heatmap (Bar Chart)
+    new Chart(document.getElementById('riskBarChart'), {
         type: 'bar',
         data: {
-            labels: Object.keys(riskData),
+            labels: Object.keys(riskCounts),
             datasets: [{
-                label: 'Gaps Found',
-                data: Object.values(riskData),
+                label: 'Red Flags Found',
+                data: Object.values(riskCounts),
                 backgroundColor: '#ed3f23',
-                borderRadius: 10
+                borderRadius: 8
             }]
         },
         options: { indexAxis: 'y', plugins: { legend: { display: false } } }
     });
 
-    // 4. Render Pie Chart (District Engagement)
-    new Chart(document.getElementById('districtChart'), {
+    // Build District Participation (Doughnut)
+    new Chart(document.getElementById('districtPieChart'), {
         type: 'doughnut',
         data: {
-            labels: Object.keys(districtData),
+            labels: Object.keys(districtCounts),
             datasets: [{
-                data: Object.values(districtData),
+                data: Object.values(districtCounts),
                 backgroundColor: ['#003945', '#7413dc', '#ffe627', '#008486', '#ed3f23', '#cbd5e1']
             }]
         },
         options: { plugins: { legend: { position: 'bottom' } } }
     });
-
-    document.getElementById('loading-state').classList.add('hidden');
-    document.getElementById('insights-ui').classList.remove('hidden');
 }
 
-loadInsights();
+generateGraphics();
