@@ -55,7 +55,9 @@ async function loadAdminData() {
     ]);
     allAuditData = auditSnap.docs.map(d => ({uid: d.id, ...d.data()}));
     allUserProfiles = userSnap.docs.map(d => ({uid: d.id, ...d.data()}));
-    renderGrid(); renderUserList();
+    renderGrid(); 
+    renderUserList();
+    renderHeatmap(); // New feature!
 }
 
 function csvSafe(v) {
@@ -82,6 +84,38 @@ window.exportToCSV = () => {
     document.body.appendChild(link); link.click(); link.remove();
 };
 
+// NEW: County Heatmap Logic
+window.renderHeatmap = () => {
+    const heatmapBody = document.getElementById('heatmap-table-body');
+    if (!heatmapBody) return;
+
+    // Count issues per question across all audits
+    const stats = {};
+    Object.keys(questionMap).forEach(qId => stats[qId] = 0);
+
+    allAuditData.forEach(audit => {
+        Object.entries(audit.responses || {}).forEach(([qId, val]) => {
+            if (val.status && val.status !== "Yes") {
+                stats[qId] = (stats[qId] || 0) + 1;
+            }
+        });
+    });
+
+    // Sort by most issues first
+    const sortedQuestions = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+
+    heatmapBody.innerHTML = sortedQuestions.map(([qId, count]) => `
+        <tr class="hover:bg-slate-50 border-b">
+            <td class="p-6 font-bold text-slate-700">${questionMap[qId]}</td>
+            <td class="p-6 text-center">
+                <span class="px-4 py-1 rounded-full font-black text-xs ${count > 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">
+                    ${count} Gaps Found
+                </span>
+            </td>
+        </tr>
+    `).join('');
+};
+
 window.showDistrictDetails = (district) => {
     const audits = allAuditData.filter(a => {
         const profile = allUserProfiles.find(u => u.uid === a.uid) || a.userDetails || {};
@@ -99,7 +133,7 @@ window.showDistrictDetails = (district) => {
                     <div class="mb-4 p-5 bg-red-50 rounded-[1.5rem] border-l-4 border-red-500 shadow-sm">
                         <div class="text-[11px] font-black text-slate-800 uppercase mb-2">${questionMap[id] || id}</div>
                         <div class="text-[11px] text-slate-600 italic bg-white p-3 rounded-xl border mb-2">${val.explanation || 'No Comment'}</div>
-                        <div class="flex gap-2"><span class="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded uppercase">${val.status}</span><span class="text-[8px] bg-slate-800 text-white px-2 py-0.5 rounded uppercase">${val.deadline}</span></div>
+                        <div class="flex gap-2"><span class="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded uppercase">${val.status}</span><span class="text-[8px] bg-slate-800 text-white px-2 py-0.5 rounded uppercase">${val.deadline || 'TBC'}</span></div>
                     </div>`);
             }
         }
@@ -108,7 +142,7 @@ window.showDistrictDetails = (district) => {
                 <td class="p-10 align-top border-r w-1/3">
                     <div class="font-black text-[#003945] text-2xl uppercase italic leading-none mb-2">${profile.group || 'N/A'}</div>
                     <div class="text-[11px] font-black text-[#7413dc] bg-purple-50 px-3 py-1 rounded-full inline-block uppercase tracking-widest mb-8 border border-purple-100">${profile.section || 'N/A'}</div>
-                    <div class="pt-6 border-t border-slate-100">
+                    <div class="pt-6 border-t border-slate-100 space-y-3">
                         <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block underline decoration-teal-500">${profile.email || a.email || 'Email Missing'}</span>
                         <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${profile.name || 'Anonymous'}</div>
                     </div>
@@ -140,17 +174,24 @@ window.renderUserList = () => {
     const tbody = document.getElementById('user-table-body');
     const pending = allUserProfiles.filter(u => !u.isVerified);
     tbody.innerHTML = pending.length ? pending.map(u => `
-        <tr class="hover:bg-slate-50">
+        <tr class="hover:bg-slate-50 border-b">
             <td class="p-6 font-bold text-[#003945] underline decoration-yellow-400">${u.email || "Missing Email"}</td>
             <td class="p-6 text-sm font-black text-slate-700 uppercase">${u.group} - ${u.section}</td>
             <td class="p-6 text-right"><button onclick="verifyUser('${u.uid}')" class="scout-gradient text-white text-[10px] font-black uppercase px-6 py-2 rounded-full shadow-lg">Approve</button></td>
         </tr>`).join('') : `<tr><td colspan="3" class="p-20 text-center text-slate-300 italic font-bold">No pending verification requests.</td></tr>`;
 };
 
-window.verifyUser = async (uid) => { await updateDoc(doc(db, "users", uid), { isVerified: true }); alert("Approved!"); await loadAdminData(); };
+window.verifyUser = async (uid) => { 
+    await updateDoc(doc(db, "users", uid), { isVerified: true }); 
+    alert("Approved!"); 
+    await loadAdminData(); // Refresh both lists
+};
+
 window.switchTab = (tab) => { 
     document.getElementById('tab-audits').classList.toggle('hidden', tab !== 'audits'); 
     document.getElementById('tab-users').classList.toggle('hidden', tab !== 'users'); 
+    document.getElementById('tab-heatmap').classList.toggle('hidden', tab !== 'heatmap'); // New toggle!
 };
+
 window.closeDetails = () => document.getElementById('response-view').classList.add('hidden');
 window.handleAdminLogout = () => { signOut(auth); location.reload(); };
